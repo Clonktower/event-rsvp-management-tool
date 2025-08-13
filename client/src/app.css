@@ -4,5 +4,5 @@
 @config "../tailwind.config.js";
 
 body {
-  @apply bg-background dark:bg-background-dark transition-colors;
+  @apply bg-background dark:bg-background-dark transition-colors text-text dark:text-text-dark;
 }
