@@ -20,7 +20,8 @@ pnpm-debug.log*
 .yarn/unplugged
 .yarn/build-state.yml
 .pnp.*
-.install-state.gz
+install-state.gz
+**/install-state.gz
 
 # Environment files
 .env
