@@ -16,7 +16,7 @@ A simple minimal web application for managing events and RSVPs. Users can create
 ## Prerequisites
 
 - Node.js (v18+ recommended)
-- npm or yarn
+- yarn
 - PostgreSQL (running locally or accessible remotely)
 
 ---
@@ -33,32 +33,26 @@ A simple minimal web application for managing events and RSVPs. Users can create
    - For the client:
      ```bash
      cd client
-     npm install
+     yarn
      ```
    - For the server:
      ```bash
      cd ../server
-     npm install
+     yarn
      ```
 
 3. **Configure environment variables:**
    - Set up your PostgreSQL connection string in the server's config (see `server/src/db/index.ts`).
 
-4. **Seed the database:**
-   ```bash
-   cd server
-   npm run seed
-   ```
-
-5. **Run the development servers:**
+4. **Run the development servers:**
    - Start the backend:
      ```bash
-     npm run dev
+     yarn dev
      ```
    - Start the frontend:
      ```bash
      cd ../client
-     npm run dev
+     yarn dev
      ```
 
 ---
@@ -67,7 +61,6 @@ A simple minimal web application for managing events and RSVPs. Users can create
 
 ### Frontend (SvelteKit)
 
-- `/` — Home page, event list
 - `/create-event` — Create a new event
 - `/events/[id]` — Event details, RSVP form, attendee list
 
@@ -90,13 +83,3 @@ A simple minimal web application for managing events and RSVPs. Users can create
 - Toast notifications for actions
 
 ---
-
-## License
-
-MIT
-
----
-
-## Notes
-
-- This project uses **Yarn** as the package manager. Use `yarn install` and `yarn dev` instead of `npm install` and `npm run dev` for both client and server setup.
