@@ -66,7 +66,6 @@ A simple minimal web application for managing events and RSVPs. Users can create
 
 ### Backend (Express API)
 
-- `GET /events` — List all events
 - `GET /events/:id` — Get event details and RSVPs
 - `POST /events` — Create a new event
 - `POST /events/:id/rsvp` — RSVP to an event (add or update)

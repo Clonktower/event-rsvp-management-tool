@@ -6,6 +6,7 @@
   let startTime = '';
   let endTime = '';
   let loading = false;
+  let createdEventId: string | null = null;
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
@@ -24,6 +25,7 @@
       const data = await response.json();
       if (response.ok) {
         alert('Event created successfully!');
+        createdEventId = data.event?.id
         // Reset the form fields
         name = '';
         date = '';
@@ -82,4 +84,13 @@
       {/if}
     </button>
   </form>
+
+  {#if createdEventId}
+    <div class="mt-6 flex flex-col items-center">
+      <a class="text-primary underline text-lg font-semibold" href="/events/{createdEventId}">
+        View Event
+      </a>
+    </div>
+  {/if}
 </main>
+
