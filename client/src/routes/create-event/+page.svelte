@@ -5,17 +5,41 @@
   let location = '';
   let startTime = '';
   let endTime = '';
+  let loading = false;
 
-  function handleSubmit(event: Event) {
+  async function handleSubmit(event: Event) {
     event.preventDefault();
     // Validate required fields
-    if (!name.trim() || !date.trim() || !location.trim()) {
-      alert('Please fill in all required fields: Name, Date, and Location.');
+    if (!name.trim() || !date.trim() || !location.trim() || !startTime.trim()) {
+      alert('Please fill in all required fields: Name, Date, Starting Time, and Location.');
       return;
     }
-    // You can handle form submission here (e.g., send to API)
-    // For now, just log the values
-    console.log({ name, date, startTime, endTime, maxAttendees, location });
+    loading = true;
+    try {
+      const response = await fetch('http://localhost:3000/create-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, date, startTime, endTime, maxAttendees, location })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert('Event created successfully!');
+        // Reset the form fields
+        name = '';
+        date = '';
+        startTime = '';
+        endTime = '';
+        maxAttendees = '';
+        location = '';
+        // Optionally, you could also focus the first input
+      } else {
+        alert(data.error || 'Failed to create event.');
+      }
+    } catch (err) {
+      alert(`Failed to connect to server: ${err}`);
+    } finally {
+      loading = false;
+    }
   }
 </script>
 
@@ -46,6 +70,16 @@
       <label for="location" class="block mb-1 font-semibold">Location<span class="text-red-500 ml-1" aria-hidden="true">*</span></label>
       <input id="location" name="location" type="text" bind:value={location} required aria-required="true" aria-label="Location" class="w-full px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:border-gray-700 dark:text-text-dark" />
     </div>
-    <button type="submit" class="mt-4 px-6 py-2 bg-primary text-white rounded-full font-bold shadow hover:bg-primary-dark transition-colors dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover" aria-label="Create Event">Create Event</button>
+    <button type="submit" class="mt-4 px-6 py-2 bg-primary text-white rounded-full font-bold shadow hover:bg-primary-dark transition-colors dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover flex items-center justify-center min-w-[140px]" aria-label="Create Event" disabled={loading}>
+      {#if loading}
+        <span class="relative flex h-5 w-5 mr-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-5 w-5 bg-white"></span>
+        </span>
+        Creating...
+      {:else}
+        Create Event
+      {/if}
+    </button>
   </form>
 </main>

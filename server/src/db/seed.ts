@@ -32,9 +32,11 @@ async function seed() {
   } catch (err) {
     console.error('Error creating tables:', err);
   } finally {
-    await pool.end();
+    // Only close the pool if this script is run directly
+    if (require.main === module) {
+      await pool.end();
+    }
   }
 }
 
 seed();
-
