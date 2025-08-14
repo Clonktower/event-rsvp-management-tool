@@ -4,7 +4,9 @@
 
   export let data: { event: Event, rsvp: Rsvp[] };
   const event = data.event;
+
   let attendees = data.rsvp
+  let isRsvpFull = attendees.filter(a => a.status === 'going').reduce((sum, a) => sum + 1 + (a.guests || 0), 0) >= event.max_attendees
   import { formatDate, toHumanTime } from '../../../utils/format';
   import { getUserFromCookie } from '../../../utils/getUserFromCookie';
   import AttendeeList from '$lib/AttendeeList.svelte';
@@ -91,12 +93,14 @@
   }
 
   let showToast = false;
+
+
 </script>
 
 {#if !event}
   <div class="text-center text-xl mt-10">No Such Event was found!</div>
 {:else}
-  <div class="max-w-xl mx-auto mt-8 p-6 rounded-lg shadow bg-background">
+  <div class="max-w-xl mx-auto mt-8 p-6 rounded-lg shadow-lg bg-gray-50 dark:bg-gray-800  ">
     <h1 class="text-2xl font-bold mb-4 text-primary">{event.name}</h1>
     <div class="mb-2"><span class="font-semibold">Date:</span> {formattedDate}</div>
     <div class="mb-2"><span class="font-semibold">Time:</span> {formattedTime}</div>
@@ -116,6 +120,7 @@
       onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
       onRSVPChange={(e) => rsvp = (e.target as HTMLInputElement)?.value as RsvpStatus}
       onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
+      isRsvpFull={isRsvpFull}
     />
     {#if showToast}
       <div class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">

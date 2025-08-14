@@ -4,7 +4,7 @@ export type Event = {
   date: string;
   start_time: string;
   end_time?: string;
-  max_attendees?: number;
+  max_attendees: number;
   location: string;
   created_at?: string;
 };
