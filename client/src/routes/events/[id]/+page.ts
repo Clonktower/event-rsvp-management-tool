@@ -4,6 +4,6 @@ export const load = async ({ params, fetch }) => {
   if (!res.ok) {
     return { event: null };
   }
-  const event = await res.json();
-  return { event };
+  const data = await res.json();
+  return { event: data.event, rsvp: data.rsvp};
 };
