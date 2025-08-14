@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createEvent as createEventService } from "../services/event";
+import { createEvent as createEventService, getEventById as getEventByIdService } from "../services/event";
 import { errorHandler } from '../utils/errorHandler';
 
 export const createEvent = async (req: Request, res: Response, next: Function) => {
@@ -16,4 +16,23 @@ export const createEvent = async (req: Request, res: Response, next: Function) =
   } catch (err) {
     next(err);
   }
+};
+
+export const getEventById = async (req: Request, res: Response, next: Function) => {
+  try {
+    const { id } = req.params;
+
+    const event = await getEventByIdService(id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    res.json(event);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const eventController = {
+  createEvent,
+  getEventById,
 };

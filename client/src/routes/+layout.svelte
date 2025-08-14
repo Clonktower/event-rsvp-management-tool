@@ -12,7 +12,9 @@
 </svelte:head>
 
 <Header />
-<main>
-  {@render children?.()}
-</main>
+<div class="flex-1 flex flex-col">
+  <main class="flex-1">
+    {@render children?.()}
+  </main>
+</div>
 <Footer />
