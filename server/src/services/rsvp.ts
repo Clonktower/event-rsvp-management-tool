@@ -1,5 +1,4 @@
 import pool from '../db';
-import { v4 as uuidv4 } from 'uuid';
 
 export async function rsvpToEventService({ eventId, attendeeId, name, status, guests = 0 }: { eventId: string, attendeeId: string, name: string, status: string, guests?: number }) {
   const id = attendeeId;

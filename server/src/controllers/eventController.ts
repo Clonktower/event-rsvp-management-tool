@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { createEvent as createEventService, getEventById as getEventByIdService } from "../services/event";
+import { getRsvpByEventId } from '../services/rsvp';
 import { errorHandler } from '../utils/errorHandler';
 
 export const createEvent = async (req: Request, res: Response, next: Function) => {
@@ -26,7 +27,9 @@ export const getEventById = async (req: Request, res: Response, next: Function) 
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
-    res.json(event);
+    // Fetch attendees for this event using the service
+    const attendees = await getRsvpByEventId(id);
+    res.status(200).json({ event, rsvp: attendees });
   } catch (err) {
     next(err);
   }

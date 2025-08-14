@@ -16,15 +16,18 @@ async function seed() {
       );
     `);
 
-    // Create attendees table
+
+    // Create rsvp table
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS attendees (
+      CREATE TABLE IF NOT EXISTS rsvp (
         id UUID PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
         event_id UUID REFERENCES events(id) ON DELETE CASCADE,
-        rsvp_status VARCHAR(10),
-        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        name VARCHAR(255) NOT NULL,
+        status VARCHAR(20) NOT NULL,
+        guests INTEGER DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        UNIQUE(event_id, id)
       );
     `);
 
