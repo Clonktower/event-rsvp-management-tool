@@ -57,17 +57,50 @@ A simple minimal web application for managing events and RSVPs. Users can create
 
 ---
 
+## Example .env (place in `server/.env`)
+ 
+```
+PORT=3000
+NODE_ENV=development
+ADMIN_USER=your_admin_username
+ADMIN_PASSWORD=your_admin_password
+```
+
+---
+
 ## Routes
 
 ### Frontend (SvelteKit)
 
 - `/create-event` — Create a new event
+- `/events` — List all events (admin only)
 - `/events/[id]` — Event details, RSVP form, attendee list
+- `/admin/login` — Admin login page
 
 ### Backend (Express API)
 
+#### Admin (Protected)
+- `POST /admin/login` — Authenticate admin
+- `POST /admin/create-event` — Create a new event
+- `GET /admin/events` — Get all events
+- `DELETE /admin/events/:id` — Delete an event
+
+#### Public
 - `GET /events/:id` — Get event details and RSVPs
-- `POST /events` — Create a new event
+- `POST /events/:id/rsvp` — RSVP to an event (add or update)
+
+---
+
+## Backend Routes (Express API)
+
+### Admin (Protected)
+- `POST /admin/login` — Authenticate admin
+- `POST /admin/create-event` — Create a new event
+- `GET /admin/events` — Get all events
+- `DELETE /admin/events/:id` — Delete an event
+
+### Public
+- `GET /events/:id` — Get event details and RSVPs
 - `POST /events/:id/rsvp` — RSVP to an event (add or update)
 
 ---
