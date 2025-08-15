@@ -17,7 +17,7 @@
     if (res.ok) {
       // ideally this shouldn't be stored in localStorage for security reasons, but we want a minimal solution. Can be improved later.
       localStorage.setItem("credentials", `${username}:${password}`);
-      goto('/admin/events');
+      goto('/events');
     } else {
       error = 'Invalid username or password';
     }

@@ -42,7 +42,7 @@
                     <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? 's' : ''})</span>
                   {/if}
                 </div>
-                <span class="text-xs text-gray-400 sm:ml-auto">{a.created_at ? new Date(a.created_at).toLocaleString(undefined, { timeZoneName: 'short' }) : ''}</span>
+                <span class="text-xs text-gray-400 sm:ml-auto">{a.created_at ? new Date(a.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : ''}</span>
               </li>
             {/each}
           {/if}
