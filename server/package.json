@@ -2,7 +2,9 @@
   "name": "server",
   "packageManager": "yarn@4.9.2",
   "dependencies": {
+    "@types/dotenv": "^8.2.3",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
     "pg": "^8.16.3",
