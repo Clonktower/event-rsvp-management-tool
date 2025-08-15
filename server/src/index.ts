@@ -4,6 +4,7 @@ import { errorHandler } from './utils/errorHandler';
 import './db/seed'; // ensure the database is seeded before starting the server
 import cors from 'cors';
 import { rateLimit } from 'express-rate-limit'
+import { requestInfoLogger } from './middlewares/logger';
 
 const app = express();
 const port = 3000;
@@ -19,6 +20,7 @@ const limiter = rateLimit({
 app.use(limiter)
 app.use(cors());
 app.use(express.json());
+app.use(requestInfoLogger);
 app.use(router);
 
 app.get("/ping", (req: Request, res: Response) => {
