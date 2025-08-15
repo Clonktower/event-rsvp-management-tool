@@ -17,7 +17,7 @@
     }
     loading = true;
     try {
-      const response = await fetch('http://localhost:3000/create-event', {
+      const response = await fetch('http://localhost:3000/admin/create-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, date, startTime, endTime, maxAttendees, location })

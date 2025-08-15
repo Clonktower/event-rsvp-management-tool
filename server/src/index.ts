@@ -16,7 +16,6 @@ const limiter = rateLimit({
   ipv6Subnet: 56,
 })
 
-
 app.use(limiter)
 app.use(cors());
 app.use(express.json());
