@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { adminFetch } from '../../utils/adminFetch';
+
   let name = '';
   let date = '';
   let maxAttendees: number | '' = '';
@@ -7,6 +10,18 @@
   let endTime = '';
   let loading = false;
   let createdEventId: string | null = null;
+  let authError = false;
+
+  onMount(async () => {
+    try {
+      const res = await adminFetch('http://localhost:3000/admin/login', { method: 'POST' });
+      if (res.status === 401 || res.status === 403) {
+        authError = true;
+      }
+    } catch (e) {
+      authError = true;
+    }
+  });
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
@@ -45,6 +60,13 @@
   }
 </script>
 
+{#if authError}
+  <div class="flex flex-col items-center justify-center min-h-[60vh] mt-12">
+      <div class="text-red-600 text-center text-lg font-semibold mb-4">
+        You are not authorized to Create Events. Please <a href="/admin/login" class="underline text-primary">login</a>.
+      </div>
+  </div>
+{:else}
 <main class="flex flex-col items-center py-8 min-h-screen">
   <h1 class="text-2xl font-bold mb-8 text-primary dark:text-primary-darkmode font-inter">Create Event</h1>
   <form class="w-full max-w-md rounded-xl shadow p-6 flex flex-col gap-3 font-inter bg-surface dark:bg-surface-dark sm:bg-surface sm:dark:bg-surface-dark bg-background dark:bg-background-dark" on:submit|preventDefault={handleSubmit} autocomplete="off">
@@ -93,4 +115,4 @@
     </div>
   {/if}
 </main>
-
+{/if}
