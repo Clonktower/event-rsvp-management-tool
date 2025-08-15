@@ -27,3 +27,9 @@ export async function deleteEvent(id: string): Promise<boolean> {
   const result = await pool.query(query, [id]);
   return !!result.rowCount && result.rowCount > 0;
 }
+
+export async function getAllEvents(): Promise<Event[]> {
+  const query = 'SELECT * FROM events ORDER BY created_at DESC';
+  const { rows } = await pool.query(query);
+  return rows;
+}
