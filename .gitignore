@@ -1,3 +1,5 @@
+# direnv/nix-direnv cache
+.direnv
 # Node dependencies
 node_modules/
 
