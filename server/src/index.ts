@@ -7,6 +7,7 @@ import { rateLimit } from 'express-rate-limit'
 import { requestInfoLogger } from './middlewares/logger';
 
 const app = express();
+// TODO: take from env
 const port = 3000;
 
 const limiter = rateLimit({

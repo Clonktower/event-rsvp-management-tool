@@ -20,7 +20,7 @@
   },
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "build": "tsc",
+    "build": "tsc --build",
     "start": "node dist/index.js"
   }
 }
