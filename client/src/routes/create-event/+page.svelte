@@ -68,8 +68,8 @@
   </div>
 {:else}
 <main class="flex flex-col items-center py-8 min-h-screen">
-  <h1 class="text-2xl font-bold mb-8 text-primary dark:text-primary-darkmode font-inter">Create Event</h1>
-  <form class="w-full max-w-md rounded-xl shadow p-6 flex flex-col gap-3 font-inter bg-surface dark:bg-surface-dark sm:bg-surface sm:dark:bg-surface-dark bg-background dark:bg-background-dark" on:submit|preventDefault={handleSubmit} autocomplete="off">
+  <form class="w-full max-w-md rounded-xl shadow p-6 flex flex-col gap-3 font-inter bg-surface dark:bg-gray-900" on:submit|preventDefault={handleSubmit} autocomplete="off">
+    <h1 class="text-2xl font-bold mb-5 text-primary dark:text-primary-darkmode font-inter text-center">Create Event</h1>
     <div>
       <label for="name" class="block mb-1 font-semibold">Event Name<span class="text-red-500 ml-1" aria-hidden="true">*</span></label>
       <input id="name" name="name" type="text" bind:value={name} required aria-required="true" aria-label="Event Name" class="w-full px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:border-gray-700 dark:text-text-dark" />
@@ -87,14 +87,14 @@
       <input id="endTime" name="endTime" type="time" bind:value={endTime} aria-label="Ending Time" class="w-full px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:border-gray-700 dark:text-text-dark" />
     </div>
     <div>
-      <label for="maxAttendees" class="block mb-1 font-semibold">Max Attendees</label>
-      <input id="maxAttendees" name="maxAttendees" type="number" min="1" bind:value={maxAttendees} aria-label="Max Attendees" class="w-full px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:border-gray-700 dark:text-text-dark" />
+      <label for="maxAttendees" class="block mb-1 font-semibold">Max Attendees<span class="text-red-500 ml-1" aria-hidden="true">*</span></label>
+      <input id="maxAttendees" name="maxAttendees" type="number" min="1" bind:value={maxAttendees} required="true" aria-label="Max Attendees" class="w-full px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:border-gray-700 dark:text-text-dark" />
     </div>
     <div>
       <label for="location" class="block mb-1 font-semibold">Location<span class="text-red-500 ml-1" aria-hidden="true">*</span></label>
       <input id="location" name="location" type="text" bind:value={location} required aria-required="true" aria-label="Location" class="w-full px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:border-gray-700 dark:text-text-dark" />
     </div>
-    <button type="submit" class="mt-4 px-6 py-2 bg-primary text-white rounded-full font-bold shadow hover:bg-primary-dark transition-colors dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover flex items-center justify-center min-w-[140px]" aria-label="Create Event" disabled={loading}>
+    <button type="submit" class="mt-4 px-6 py-2 bg-primary text-white rounded font-bold shadow hover:bg-primary-dark transition-colors dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover flex items-center justify-center min-w-[140px]" aria-label="Create Event" disabled={loading}>
       {#if loading}
         <span class="relative flex h-5 w-5 mr-2">
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
