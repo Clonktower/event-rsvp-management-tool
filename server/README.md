@@ -24,13 +24,9 @@ SQLITE_DB_PATH=../data/event_rsvp.db # optional, default is ../data/event_rsvp.d
 ## Setup
 1. Install dependencies:
    ```sh
-   yarn install
+   yarn
    ```
-2. Seed the database:
-   ```sh
-   yarn seed
-   ```
-3. Start the server:
+2. Start the server:
    ```sh
    yarn start
    ```
