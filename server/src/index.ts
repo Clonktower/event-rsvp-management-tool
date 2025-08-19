@@ -1,14 +1,17 @@
 import express, { Request, Response } from "express";
 import router from "./routes";
 import { errorHandler } from './utils/errorHandler';
-import './db/seed'; // ensure the database is seeded before starting the server
+import seed from './db/seed'; // ensure the database is seeded before starting the server
 import cors from 'cors';
 import { rateLimit } from 'express-rate-limit'
 import { requestInfoLogger } from './middlewares/logger';
+import config from './config'
+
+// Ensure the database is seeded before starting the server
+seed()
 
 const app = express();
-// TODO: take from env
-const port = 3000;
+const port = config.PORT;
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -32,5 +35,5 @@ app.get("/ping", (req: Request, res: Response) => {
 app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server is running on port ${port}`);
 });

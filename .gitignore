@@ -17,6 +17,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+#sqlite
+*.db
+
 # Yarn Berry
 .yarn/cache
 .yarn/unplugged

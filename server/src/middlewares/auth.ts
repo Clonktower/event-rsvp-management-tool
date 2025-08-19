@@ -8,7 +8,6 @@ export function authenticateAdmin(req: Request, res: Response, next: NextFunctio
     return res.status(401).json({ error: 'Authorization header missing or invalid' });
   }
   const credentials = authHeader.replace('Basic ', '');
-
   if (
     credentials !== `${config.ADMIN_USER}:${config.ADMIN_PASSWORD}`
   ) {

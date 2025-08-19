@@ -1,15 +1,8 @@
-import { Pool } from 'pg';
+import Database from 'better-sqlite3';
+import path from 'path';
 
-// You can use environment variables or hardcode for demo
-const pool = new Pool({
-  user: process.env.PGUSER || 'postgres',
-  host: process.env.PGHOST || 'localhost',
-  database: process.env.PGDATABASE || 'event_rsvp',
-  password: process.env.PGPASSWORD || 'password',
-  port: Number(process.env.PGPORT) || 5432,
-  max: 10, // max number of clients in the pool
-  idleTimeoutMillis: 30000, // close idle clients after 30 seconds
-});
+// Use environment variable or default path
+const dbPath = process.env.SQLITE_DB_PATH || path.join(__dirname, '../../data/event_rsvp.db');
+const db = new Database(dbPath);
 
-export default pool;
-
+export default db;
