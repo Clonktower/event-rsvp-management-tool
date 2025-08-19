@@ -42,7 +42,7 @@ A simple minimal web application for managing events and RSVPs. Users can create
      ```
 
 3. **Configure environment variables:**
-   - Set up your PostgreSQL connection string in the server's config (see `server/src/db/index.ts`).
+   - Set up env variables based on `.env.example`. See `/server.README.md` for more details.
 
 4. **Run the development servers:**
    - Start the backend:
@@ -54,17 +54,6 @@ A simple minimal web application for managing events and RSVPs. Users can create
      cd ../client
      yarn dev
      ```
-
----
-
-## Example .env (place in `server/.env`)
- 
-```
-PORT=3000
-NODE_ENV=development
-ADMIN_USER=your_admin_username
-ADMIN_PASSWORD=your_admin_password
-```
 
 ---
 
