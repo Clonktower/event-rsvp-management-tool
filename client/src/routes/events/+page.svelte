@@ -48,7 +48,7 @@
       <div class="w-full grid grid-cols-1 gap-8">
         {#each events as event}
           <div
-            class="w-full max-w-xs mx-auto mt-8 p-6 rounded-lg shadow-lg bg-gray-50 dark:bg-gray-800"
+            class="w-full max-w-xs mx-auto mt-8 p-6 rounded-lg shadow-lg bg-gray-50 dark:bg-gray-900"
             on:click={() => openEvent(event.id)}
             tabindex="0"
             role="button"

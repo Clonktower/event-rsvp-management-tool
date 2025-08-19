@@ -100,7 +100,7 @@
 {#if !event}
   <div class="text-center text-xl mt-10">No Such Event was found!</div>
 {:else}
-  <div class="max-w-xl mx-auto mt-8 p-6 rounded-lg shadow-lg bg-gray-50 dark:bg-gray-800  ">
+  <div class="max-w-xl mx-auto mt-8 p-6 rounded-lg shadow-lg bg-gray-50 dark:bg-gray-900  ">
     <h1 class="text-2xl font-bold mb-4 text-primary">{event.name}</h1>
     <div class="mb-2"><span class="font-semibold">Date:</span> {formattedDate}</div>
     <div class="mb-2"><span class="font-semibold">Time:</span> {formattedTime}</div>
