@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { adminFetch } from '../../utils/adminFetch';
+  import { API_HOST } from '../../utils/apiHost';
 
   let name = '';
   let date = '';
@@ -14,7 +15,7 @@
 
   onMount(async () => {
     try {
-      const res = await adminFetch('http://localhost:3000/admin/login', { method: 'POST' });
+      const res = await adminFetch(`${API_HOST}/admin/login`, { method: 'POST' });
       if (res.status === 401 || res.status === 403) {
         authError = true;
       }
@@ -32,7 +33,7 @@
     }
     loading = true;
     try {
-      const response = await adminFetch('http://localhost:3000/admin/create-event', {
+      const response = await adminFetch(`${API_HOST}/admin/create-event`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, date, startTime, endTime, maxAttendees, location })

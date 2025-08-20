@@ -4,6 +4,7 @@
   import type { Event } from '../../types/Event';
   import { adminFetch } from '../../utils/adminFetch';
   import { formatDate } from '../../utils/format';
+  import { API_HOST } from '../../utils/apiHost';
 
   let events: Event[] = [];
   let loading = true;
@@ -11,7 +12,7 @@
 
   onMount(async () => {
     try {
-      const res = await adminFetch('http://localhost:3000/admin/events');
+      const res = await adminFetch(`${API_HOST}/admin/events`);
       if (res.status === 401 || res.status === 403) {
         error = 'unauthorized';
         return;
