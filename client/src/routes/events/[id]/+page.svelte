@@ -1,17 +1,18 @@
 <script lang="ts">
   import type {RsvpStatus, Rsvp} from "../../../types/Rsvp";
   import type {Event} from "../../../types/Event";
+  import { API_HOST } from '../../../utils/apiHost';
+  import { formatDate, toHumanTime } from '../../../utils/format';
+  import { getUserFromCookie } from '../../../utils/getUserFromCookie';
+  import AttendeeList from '$lib/AttendeeList.svelte';
+  import RSVPForm from '$lib/RSVPForm.svelte';
+  import { onMount } from 'svelte';
 
   export let data: { event: Event, rsvp: Rsvp[] };
   const event = data.event;
 
   let attendees = data.rsvp
   let isRsvpFull = attendees.filter(a => a.status === 'going').reduce((sum, a) => sum + 1 + (a.guests || 0), 0) >= event.max_attendees
-  import { formatDate, toHumanTime } from '../../../utils/format';
-  import { getUserFromCookie } from '../../../utils/getUserFromCookie';
-  import AttendeeList from '$lib/AttendeeList.svelte';
-  import RSVPForm from '$lib/RSVPForm.svelte';
-  import { onMount } from 'svelte';
 
   interface RSVPRequestBody {
     name: string;
@@ -69,7 +70,7 @@
       guests: rsvp === 'going' ? Number(guests) : 0
     };
     if (attendeeId) body.attendeeId = attendeeId;
-    const response = await fetch(`http://localhost:3000/events/${event.id}/rsvp`, {
+    const response = await fetch(`${API_HOST}/events/${event.id}/rsvp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -81,7 +82,7 @@
         document.cookie = `user_details=${encodeURIComponent(JSON.stringify({id: data.rsvp.id, name: data.rsvp.name}))}; path=/;`;
       }
       // Refetch event and attendee list
-      const refetchRes = await fetch(`http://localhost:3000/events/${event.id}`);
+      const refetchRes = await fetch(`${API_HOST}/events/${event.id}`);
       if (refetchRes.ok) {
         const refetchData = await refetchRes.json();
         attendees = refetchData.rsvp;
