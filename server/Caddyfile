@@ -9,3 +9,8 @@ api.rsvp.clonktower.de {
         Referrer-Policy "no-referrer-when-downgrade"
     }
 }
+
+# Respond to direct IP or any host on HTTP/HTTPS
+:80, :443 {
+    respond "Service running" 200
+}
