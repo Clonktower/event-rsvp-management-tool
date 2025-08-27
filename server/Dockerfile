@@ -5,7 +5,7 @@ FROM node:24-alpine
 WORKDIR /app
 
 # Copy package.json and package-lock.json/yarn.lock
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock tsconfig.json ./
 
 # Enable Corepack for Yarn Berry
 RUN corepack enable
