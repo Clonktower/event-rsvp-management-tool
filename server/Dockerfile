@@ -6,7 +6,8 @@ WORKDIR /app
 
 # Copy package manager and config files
 COPY package.json yarn.lock tsconfig.json ./
-
+COPY ./.yarn ./.yarn
+COPY ./.yarnrc.yml ./
 # Enable Corepack for Yarn Berry
 RUN corepack enable
 
