@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy package.json and package-lock.json/yarn.lock
 COPY package.json yarn.lock ./
 
+# Enable Corepack for Yarn Berry
+RUN corepack enable
+
 # Install dependencies
 RUN yarn install --frozen-lockfile
 
