@@ -15,7 +15,6 @@ RUN yarn install --immutable
 
 # ---- build (compile TypeScript -> dist) ----
 FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN yarn build
 
