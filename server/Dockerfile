@@ -1,6 +1,31 @@
+# syntax=docker/dockerfile:1
+
+# ---- base (build tools + yarn via corepack) ----
+FROM node:24-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache python3 make g++ \
+ && corepack enable
+
+# ---- deps (install node_modules from lockfile) ----
+FROM base AS deps
+# If you have a .yarnrc.yml, include it here too
+COPY package.json yarn.lock ./
+RUN yarn --version && node --version
+RUN yarn install --immutable
+
+# ---- build (compile TypeScript -> dist) ----
+FROM base AS build
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN yarn build
+
+# ---- runtime (simple, no non-root user) ----
 FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+
+# If you need a shell inside the container, uncomment:
+# RUN apk add --no-cache bash
 
 COPY package.json ./package.json
 COPY --from=deps /app/node_modules ./node_modules

@@ -8,10 +8,10 @@ services:
     image: local/event-rsvp-management-tool-server:latest
     container_name: app
     restart: unless-stopped
-    env_file: ./.env # or .env in project root; adjust path if needed
+    env_file: ./.env
     environment:
       - PORT=${PORT:-3000}
-      - SQLITE_PATH=/data/app.db
+      - SQLITE_DB_PATH=/data/app.db
       - NODE_ENV=production
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:${PORT:-3000}/ping || exit 1"]
@@ -33,7 +33,7 @@ services:
       - "443:443"
       - "2019:2019"
     volumes:
-      - ../Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data:Z
       - caddy_config:/config:Z
     environment:
