@@ -9,7 +9,7 @@ RUN apk add --no-cache python3 make g++ \
 # ---- deps (install node_modules from lockfile) ----
 FROM base AS deps
 # If you have a .yarnrc.yml, include it here too
-COPY package.json yarn.lock ./
+COPY . .
 RUN yarn --version && node --version
 RUN yarn install --immutable
 
