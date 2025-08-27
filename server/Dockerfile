@@ -13,11 +13,11 @@ RUN corepack enable
 # Install dependencies
 RUN yarn install --frozen-lockfile
 
-# Build the application
-RUN yarn build
-
 # Copy the rest of the application code
 COPY . .
+
+# Build the application
+RUN yarn build
 
 # Expose port 3000
 EXPOSE 3000
