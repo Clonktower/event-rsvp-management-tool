@@ -34,6 +34,11 @@ app.get("/ping", (req: Request, res: Response) => {
 // Error handling middleware should be registered after all routes
 app.use(errorHandler);
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down...");
+  server.close(() => process.exit(0));
 });
