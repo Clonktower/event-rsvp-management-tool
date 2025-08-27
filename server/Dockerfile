@@ -5,8 +5,7 @@ FROM node:24-alpine
 WORKDIR /app
 
 # Copy package manager and config files
-COPY package.json yarn.lock tsconfig.json .yarnrc.yml ./
-COPY .yarn/ .yarn/
+COPY package.json yarn.lock tsconfig.json ./
 
 # Enable Corepack for Yarn Berry
 RUN corepack enable
