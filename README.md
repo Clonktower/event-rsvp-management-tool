@@ -15,7 +15,7 @@ A simple minimal web application for managing events and RSVPs. Users can create
 
 ## Prerequisites
 
-- Node.js (v18+ recommended)
+- Node.js
 - yarn
 - PostgreSQL (running locally or accessible remotely)
 
@@ -75,20 +75,6 @@ A simple minimal web application for managing events and RSVPs. Users can create
 - `DELETE /admin/events/:id` — Delete an event
 
 #### Public
-- `GET /events/:id` — Get event details and RSVPs
-- `POST /events/:id/rsvp` — RSVP to an event (add or update)
-
----
-
-## Backend Routes (Express API)
-
-### Admin (Protected)
-- `POST /admin/login` — Authenticate admin
-- `POST /admin/create-event` — Create a new event
-- `GET /admin/events` — Get all events
-- `DELETE /admin/events/:id` — Delete an event
-
-### Public
 - `GET /events/:id` — Get event details and RSVPs
 - `POST /events/:id/rsvp` — RSVP to an event (add or update)
 

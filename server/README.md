@@ -7,7 +7,7 @@
 - TypeScript
 
 ## Prerequisites
-- Node.js (v18+ recommended)
+- Node.js
 - Yarn (for dependency management)
 
 ## Environment Variables
