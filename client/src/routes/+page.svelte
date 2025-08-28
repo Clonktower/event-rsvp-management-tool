@@ -54,7 +54,7 @@
     <h1 class="text-3xl font-extrabold text-center drop-shadow-funky font-inter" id="page-title">
       <span class="inline-block min-w-[120px]">{displayText}</span> <span role="img" aria-label="waving hand">👋</span>
     </h1>
-    <p class="mt-10 text-center text-gray-600 dark:text-gray-300 max-w-xl">A simple app to organise and manage our BOTC and other private events.<br/>Currenlty, <strong>only admins</strong> are allowed to create events, if you would like to use it for your own event, please contact your nearest admin for help!</p>
+    <p class="mt-10 text-center text-gray-600 dark:text-gray-300 max-w-xl">A simple app to organise and manage our BOTC and other private events.<br/>Currently, <strong>only admins</strong> are allowed to create events, if you would like to use it for your own event, please contact your nearest admin for help!</p>
   <a
     href="/create-event"
     class="mt-6 px-8 py-3 bg-primary text-white rounded shadow-lg hover:bg-primary-dark transition-colors text-lg font-bold font-inter inline-block text-center dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover"
