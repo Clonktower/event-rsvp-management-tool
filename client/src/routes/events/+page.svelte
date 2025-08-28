@@ -30,6 +30,20 @@
   function openEvent(id: string) {
     goto(`/events/${id}`);
   }
+
+  async function deleteEvent(id: string) {
+    if (confirm('Are you sure you want to delete this event?')) {
+      try {
+        const res = await adminFetch(`${API_HOST}/admin/events/${id}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) throw new Error('Failed to delete event');
+        events = events.filter((event) => event.id !== id);
+      } catch (e) {
+        error = e.message || 'Error deleting event';
+      }
+    }
+  }
 </script>
 
 <main class="flex flex-col items-center min-h-[60vh] py-8 px-2">
@@ -49,13 +63,24 @@
       <div class="w-full grid grid-cols-1 gap-8">
         {#each events as event}
           <div
-            class="w-full max-w-xs mx-auto mt-8 p-6 rounded-lg shadow-lg bg-gray-50 dark:bg-gray-900"
+            class="w-full max-w-xs mx-auto mt-8 p-6 rounded-lg shadow-lg bg-gray-50 dark:bg-gray-900 relative"
             on:click={() => openEvent(event.id)}
             tabindex="0"
             role="button"
             aria-label={`View event ${event.name}`}
           >
-            <div class="font-bold text-xl mb-1">{event.name}</div>
+            <div class="flex items-center justify-between mb-1">
+              <div class="font-bold text-xl">{event.name}</div>
+              <button
+                class="ml-2 text-red-500 hover:text-red-700 bg-white dark:bg-gray-800 rounded-full p-1 shadow focus:outline-none z-10"
+                on:click|stopPropagation={() => deleteEvent(event.id)}
+                aria-label="Delete event"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <div class="text-sm text-gray-500 mb-1">{formatDate(event.date)}</div>
             <div class="text-sm text-gray-500 mb-1">{event.location}</div>
             <div class="text-xs text-gray-400 mt-2">Max Attendees: {event.max_attendees ?? 'Unlimited'}</div>

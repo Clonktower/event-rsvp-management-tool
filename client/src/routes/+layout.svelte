@@ -13,7 +13,7 @@
 
 <Header />
 <div class="flex-1 flex flex-col">
-  <main class="flex-1">
+  <main class="flex-1 px-2 sm:px-0">
     {@render children?.()}
   </main>
 </div>
