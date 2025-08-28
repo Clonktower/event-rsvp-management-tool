@@ -12,6 +12,7 @@
   let loading = false;
   let createdEventId: string | null = null;
   let authError = false;
+  let authLoading = true;
 
   onMount(async () => {
     try {
@@ -21,6 +22,8 @@
       }
     } catch (e) {
       authError = true;
+    } finally {
+      authLoading = false;
     }
   });
 
@@ -61,7 +64,14 @@
   }
 </script>
 
-{#if authError}
+{#if authLoading}
+  <div class="flex flex-col items-center justify-center min-h-[60vh] mt-12">
+    <div class="text-gray-500 text-center text-lg font-semibold mb-4">
+      <span class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></span>
+      <span class="block mt-4">Checking authorization...</span>
+    </div>
+  </div>
+{:else if authError}
   <div class="flex flex-col items-center justify-center min-h-[60vh] mt-12">
       <div class="text-red-600 text-center text-lg font-semibold mb-4">
         You are not authorized to Create Events. Please <a href="/admin/login" class="underline text-primary">login</a>.
