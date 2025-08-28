@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import {API_HOST} from "../../../utils/apiHost";
   let username = '';
   let password = '';
   let loading = false;
@@ -8,7 +9,7 @@
   async function handleLogin() {
     loading = true;
     error = '';
-    const res = await fetch('http://localhost:3000/admin/login', {
+    const res = await fetch(`${API_HOST}/admin/login`, {
       headers: {
         'Authorization': `Basic ${username}:${password}`
       },
