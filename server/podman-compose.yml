@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: local/event-rsvp-management-tool-server:latest
+    container_name: app
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - PORT=${PORT:-3000}
+      - SQLITE_DB_PATH=/data/app.db
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:${PORT:-3000}/ping || exit 1"]
+      interval: 30s
+      timeout: 2s
+      retries: 5
+    volumes:
+      - app_data:/data:Z
+    networks:
+      - webnet
+
+  caddy:
+    image: docker.io/library/caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "2019:2019"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data:Z
+      - caddy_config:/config:Z
+    environment:
+      - ACME_AGREE=true
+      - EMAIL=${CADDY_EMAIL}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - webnet
+
+volumes:
+  app_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  webnet:
+    driver: bridge

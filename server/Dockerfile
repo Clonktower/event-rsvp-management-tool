@@ -1,19 +1,38 @@
-FROM node:24-alpine3.21
+# Use official Node.js LTS image
+FROM node:24-alpine
 
+# Set working directory
 WORKDIR /app
 
+# Copy package manager and config files
+COPY package.json yarn.lock tsconfig.json ./
+COPY ./.yarn ./.yarn
+COPY ./.yarnrc.yml ./
+# Enable Corepack for Yarn Berry
 RUN corepack enable
 
-COPY tsconfig.json ./
-COPY yarn.lock .yarnrc.yml package.json ./
-COPY src ./src
+# Install dependencies
+RUN yarn install --frozen-lockfile
 
-RUN yarn install
+# Copy the rest of the application code
+COPY . .
+
+# Build the application
 RUN yarn build
 
-ENV NODE_ENV=production
-
-# TODO: Configure env var and set it here
+# Expose port 3000
 EXPOSE 3000
 
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV SQLITE_DB_PATH=/data/app.db
+
+# Create data directory for SQLite DB
+RUN mkdir -p /data
+
+# Set volume for SQLite DB
+VOLUME ["/data"]
+
+# Start the server
 CMD ["yarn", "start"]
