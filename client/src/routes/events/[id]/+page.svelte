@@ -123,9 +123,12 @@
       onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
       isRsvpFull={isRsvpFull}
     />
+
     {#if showToast}
-      <div class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
-        Your response was saved!
+      <div class="fixed bottom-20 left-0 w-full flex justify-center z-50">
+        <div class="bg-green-600 text-white px-4 py-2 rounded shadow-lg">
+          Your response was saved!
+        </div>
       </div>
     {/if}
   </div>
