@@ -102,13 +102,27 @@
   <div class="text-center text-xl mt-10">No Such Event was found!</div>
 {:else}
   <div class="max-w-xl mx-auto mt-8 p-6 rounded-lg shadow-lg bg-gray-50 dark:bg-gray-900  ">
-    <h1 class="text-2xl font-bold mb-4 text-primary">{event.name}</h1>
+    <h1 class="text-2xl font-bold mb-4 text-primary flex items-center gap-4 justify-between">
+      <span>{event.name}</span>
+      {#if event.max_attendees}
+        <a
+          class="px-3 py-1 rounded bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+          href={`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${event.start_time.replace(/[-:]/g, '').replace('.000Z','')}/${event.end_time ? event.end_time.replace(/[-:]/g, '').replace('.000Z','') : ''}&location=${encodeURIComponent(event.location || '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3M16 7V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          Add to calendar
+        </a>
+      {/if}
+    </h1>
     <div class="mb-2"><span class="font-semibold">Date:</span> {formattedDate}</div>
     <div class="mb-2"><span class="font-semibold">Time:</span> {formattedTime}</div>
     <div class="mb-2"><span class="font-semibold">Location:</span> {event.location}</div>
     {#if event.max_attendees}
       <div class="mb-2"><span class="font-semibold">Max Attendees:</span> {event.max_attendees}</div>
     {/if}
+
 
     <AttendeeList {attendees} />
 
@@ -123,9 +137,12 @@
       onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
       isRsvpFull={isRsvpFull}
     />
+
     {#if showToast}
-      <div class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
-        Your response was saved!
+      <div class="fixed bottom-20 left-0 w-full flex justify-center z-50">
+        <div class="bg-green-600 text-white px-4 py-2 rounded shadow-lg">
+          Your response was saved!
+        </div>
       </div>
     {/if}
   </div>

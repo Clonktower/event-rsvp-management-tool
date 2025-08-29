@@ -35,14 +35,14 @@
               </div>
             </li>
             {#each attendees.filter(a => a.status === group.key) as a (a.id)}
-              <li class="px-4 py-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 justify-between">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+              <li class="px-4 py-2 flex flex-row items-center gap-4 justify-between">
+                <div class="flex  flex-row items-center  gap-4">
                   <span class="font-medium">{a.name}</span>
                   {#if a.guests > 0}
                     <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? 's' : ''})</span>
                   {/if}
                 </div>
-                <span class="text-xs text-gray-400 sm:ml-auto">{a.created_at ? new Date(a.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                <span class="text-xs text-gray-400 ml-auto">{a.created_at ? new Date(a.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : ''}</span>
               </li>
             {/each}
           {/if}

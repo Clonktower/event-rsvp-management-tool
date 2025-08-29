@@ -58,7 +58,10 @@
     {:else if error}
       <div class="text-center text-red-500">{error}</div>
     {:else if events.length === 0}
-      <div class="text-center text-gray-500">No events found.</div>
+      <div class="text-center text-gray-500">
+        No events found.<br />
+        <a href="/create-event" class="underline text-primary">Click here to create new event.</a>
+      </div>
     {:else}
       <div class="w-full grid grid-cols-1 gap-8">
         {#each events as event}

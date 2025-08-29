@@ -63,4 +63,12 @@
   >
     Create Event
   </a>
+  <a
+    href="/events"
+    class="mt-6 px-8 py-3 bg-primary text-white rounded shadow-lg hover:bg-primary-dark transition-colors text-lg font-bold font-inter inline-block text-center dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover"
+    aria-label="Create Event"
+    role="button"
+  >
+    View Events
+  </a>
 </main>
