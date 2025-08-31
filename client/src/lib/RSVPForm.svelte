@@ -9,7 +9,6 @@
   export let onNameInput: (e: Event) => void;
   export let onRSVPChange: (e: Event) => void;
   export let onGuestsChange: (e: Event) => void;
-  export let isRsvpFull: boolean = false;
 
 </script>
 
@@ -39,5 +38,5 @@
     </select>
   </div>
   {/if}
-  <button type="submit" class="self-start px-6 py-2 bg-primary text-white rounded font-bold shadow hover:bg-primary-dark transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled={isRsvpFull}>Submit</button>
+  <button type="submit" class="self-start px-6 py-2 bg-primary text-white rounded font-bold shadow hover:bg-primary-dark transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">Submit</button>
 </form>
