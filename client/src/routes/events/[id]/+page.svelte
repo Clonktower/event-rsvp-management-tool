@@ -62,7 +62,7 @@
   async function handleRSVPSubmit() {
     if (!attendeeName.trim()) return;
     const userDetails = getUserFromCookie();
-    let attendeeId = userDetails?.name?.toLowerCase() === attendeeName?.toLowerCase() ? userDetails?.id : undefined;
+    let attendeeId = attendees.find(a => a.id === userDetails?.id)?.id ?? undefined;
 
     const body: RSVPRequestBody = {
       name: attendeeName,
