@@ -8,7 +8,7 @@ A simple minimal web application for managing events and RSVPs. Users can create
 
 - **Frontend:** SvelteKit, TypeScript, Tailwind CSS
 - **Backend:** Node.js, Express, TypeScript
-- **Database:** PostgreSQL
+- **Database:** SQLite
 - **Other:** Vite, ESLint, Prettier
 
 ---
@@ -17,7 +17,6 @@ A simple minimal web application for managing events and RSVPs. Users can create
 
 - Node.js
 - yarn
-- PostgreSQL (running locally or accessible remotely)
 
 ---
 
