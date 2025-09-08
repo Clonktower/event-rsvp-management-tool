@@ -34,7 +34,7 @@
     }
   }
 
-  let rsvp: RsvpStatus = 'not_going';
+  let rsvp: RsvpStatus = 'going';
   const rsvpOptions: {
     value: RsvpStatus;
     label: string;
