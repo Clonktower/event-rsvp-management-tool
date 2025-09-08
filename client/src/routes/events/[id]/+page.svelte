@@ -13,7 +13,7 @@
 
   let attendees = data.rsvp
   let isRsvpFull = attendees.filter(a => a.status === 'going').reduce((sum, a) => sum + 1 + (a.guests || 0), 0) >= event.max_attendees
-  $: goingCount = attendees.filter(a => a.status === 'going').length;
+  $: goingCount = attendees.filter(a => a.status === 'going').reduce((total, attendee) => total + 1 + (attendee.guests ?? 0), 0);
 
   interface RSVPRequestBody {
     name: string;
