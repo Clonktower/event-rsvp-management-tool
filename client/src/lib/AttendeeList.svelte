@@ -12,12 +12,32 @@
 
   function formatRsvpTime(dateStr: string) {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
-    const day = d.getDate();
-    const month = d.toLocaleString('en-US', { month: 'short' });
-    const hour = d.getHours().toString().padStart(2, '0');
-    const min = d.getMinutes().toString().padStart(2, '0');
-    return `${day} ${month}, ${hour}:${min}`;
+    const rsvpDate = new Date(dateStr);
+    const rsvpYear = rsvpDate.getFullYear();
+    const rsvpMonth = rsvpDate.getMonth();
+    const rsvpDay = rsvpDate.getDate();
+
+    const now = new Date();
+    const nowYear = now.getFullYear();
+    const nowMonth = now.getMonth();
+    const nowDay = now.getDate();
+
+    const yesterday = new Date(nowYear, nowMonth, nowDay - 1);
+
+    const isToday = rsvpYear === nowYear && rsvpMonth === nowMonth && rsvpDay === nowDay;
+    const isYesterday = rsvpYear === yesterday.getFullYear() && rsvpMonth === yesterday.getMonth() && rsvpDay === yesterday.getDate();
+
+    const hour = rsvpDate.getHours().toString().padStart(2, '0');
+    const min = rsvpDate.getMinutes().toString().padStart(2, '0');
+
+    if (isToday) {
+      return `Today, ${hour}:${min}`;
+    } else if (isYesterday) {
+      return `Yesterday, ${hour}:${min}`;
+    } else {
+      const monthShort = rsvpDate.toLocaleString('en-US', { month: 'short' });
+      return `${rsvpDay} ${monthShort}, ${hour}:${min}`;
+    }
   }
 </script>
 
@@ -31,7 +51,7 @@
       <ul id="attendees-list" class="mt-2 border rounded bg-surface dark:bg-surface-dark divide-y">
         {#each groups as group (group.key)}
           {#if attendees.filter(a => a.status === group.key).length}
-            <li class="px-4 py-2 font-semibold bg-gray-100 dark:bg-gray-800 {group.color}" key={group.key}>
+            <li class="px-4 py-2 font-semibold bg-gray-100 dark:bg-gray-800 {group.color}">
               <div class="flex flex-col items-start">
                 <span class="flex items-center">
                   <span>{group.label}</span>
