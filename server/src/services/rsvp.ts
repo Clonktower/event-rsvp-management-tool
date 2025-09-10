@@ -20,3 +20,8 @@ export function rsvpToEventService({ eventId, attendeeId, name, status, guests =
 export function getRsvpByEventId(eventId: string) {
   return db.prepare('SELECT id, name, status, guests, created_at, updated_at FROM rsvp WHERE event_id = ? ORDER BY created_at ASC').all(eventId);
 }
+
+// Deletes an RSVP by id
+export function deleteRsvpById(id: string) {
+  return db.prepare('DELETE FROM rsvp WHERE id = ?').run(id);
+}
