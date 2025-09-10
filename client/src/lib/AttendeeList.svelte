@@ -9,6 +9,16 @@
     { key: 'maybe', label: 'Maybe', color: 'text-yellow-600 dark:text-yellow-400' },
     { key: 'not_going', label: 'Not Going', color: 'text-red-600 dark:text-red-400' }
   ];
+
+  function formatAttendeeTime(dateStr: string) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const day = d.getDate();
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const hour = d.getHours().toString().padStart(2, '0');
+    const min = d.getMinutes().toString().padStart(2, '0');
+    return `${day} ${month}, ${hour}:${min}`;
+  }
 </script>
 
 {#if attendees.length}
@@ -42,7 +52,7 @@
                     <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? 's' : ''})</span>
                   {/if}
                 </div>
-                <span class="text-xs text-gray-400 ml-auto">{a.created_at ? new Date(a.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                <span class="text-xs text-gray-400 ml-auto">{a.created_at ? formatAttendeeTime(a.created_at) : ''}</span>
               </li>
             {/each}
           {/if}
