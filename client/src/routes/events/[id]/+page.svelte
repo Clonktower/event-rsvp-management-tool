@@ -13,6 +13,7 @@
 
   let attendees = data.rsvp
   let isRsvpFull = attendees.filter(a => a.status === 'going').reduce((sum, a) => sum + 1 + (a.guests || 0), 0) >= event.max_attendees
+  $: goingCount = attendees.filter(a => a.status === 'going').reduce((total, attendee) => total + 1 + (attendee.guests ?? 0), 0);
 
   interface RSVPRequestBody {
     name: string;
@@ -120,7 +121,7 @@
     <div class="mb-2"><span class="font-semibold">Time:</span> {formattedTime}</div>
     <div class="mb-2"><span class="font-semibold">Location:</span> {event.location}</div>
     {#if event.max_attendees}
-      <div class="mb-2"><span class="font-semibold">Max Attendees:</span> {event.max_attendees}</div>
+      <div class="mb-2"><span class="font-semibold">Currently going:</span> {goingCount}/{event.max_attendees}</div>
     {/if}
 
 
