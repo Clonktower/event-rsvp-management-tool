@@ -10,7 +10,7 @@
     { key: 'not_going', label: 'Not Going', color: 'text-red-600 dark:text-red-400' }
   ];
 
-  function formatAttendeeTime(dateStr: string) {
+  function formatRsvpTime(dateStr: string) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     const day = d.getDate();
@@ -52,7 +52,7 @@
                     <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? 's' : ''})</span>
                   {/if}
                 </div>
-                <span class="text-xs text-gray-400 ml-auto">{a.created_at ? formatAttendeeTime(a.created_at) : ''}</span>
+                <span class="text-xs text-gray-400 ml-auto">{a.created_at ? formatRsvpTime(a.created_at) : ''}</span>
               </li>
             {/each}
           {/if}
