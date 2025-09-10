@@ -7,12 +7,12 @@
   import AttendeeList from '$lib/AttendeeList.svelte';
   import RSVPForm from '$lib/RSVPForm.svelte';
   import { onMount } from 'svelte';
+  import { adminFetch } from '../../../utils/adminFetch';
 
   export let data: { event: Event, rsvp: Rsvp[] };
   const event = data.event;
 
   let attendees = data.rsvp
-  let isRsvpFull = attendees.filter(a => a.status === 'going').reduce((sum, a) => sum + 1 + (a.guests || 0), 0) >= event.max_attendees
   $: goingCount = attendees.filter(a => a.status === 'going').reduce((total, attendee) => total + 1 + (attendee.guests ?? 0), 0);
 
   interface RSVPRequestBody {
@@ -95,7 +95,24 @@
   }
 
   let showToast = false;
+  let showDeleteToast = false;
+  let deleteError = '';
 
+  async function onDeleteAttendee(id: string) {
+    deleteError = '';
+    try {
+      const res = await adminFetch(`${API_HOST}/admin/events/rsvp/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        attendees = attendees.filter(a => a.id !== id);
+        showDeleteToast = true;
+        setTimeout(() => showDeleteToast = false, 2000);
+      } else {
+        deleteError = 'Failed to delete attendee.';
+      }
+    } catch (_) {
+      deleteError = 'Error deleting attendee.';
+    }
+  }
 
 </script>
 
@@ -125,7 +142,7 @@
     {/if}
 
 
-    <AttendeeList {attendees} />
+    <AttendeeList attendees={attendees} onDelete={onDeleteAttendee} />
 
     <RSVPForm
       rsvp={rsvp}
@@ -136,7 +153,6 @@
       onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
       onRSVPChange={(e) => rsvp = (e.target as HTMLInputElement)?.value as RsvpStatus}
       onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
-      isRsvpFull={isRsvpFull}
     />
 
     {#if showToast}
@@ -145,6 +161,12 @@
           Your response was saved!
         </div>
       </div>
+    {/if}
+    {#if showDeleteToast}
+      <div class="w-full text-center bg-green-600 text-white py-2 rounded mb-2">Attendee deleted!</div>
+    {/if}
+    {#if deleteError}
+      <div class="w-full text-center bg-red-600 text-white py-2 rounded mb-2">{deleteError}</div>
     {/if}
   </div>
 {/if}

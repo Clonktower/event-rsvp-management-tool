@@ -3,6 +3,7 @@
 
   export let attendees: Rsvp[] = [];
   let attendeesOpen = false;
+  export let onDelete: (id: string) => void = () => {};
 
   const groups = [
     { key: 'going', label: 'Going', color: 'text-green-600 dark:text-green-400' },
@@ -21,7 +22,7 @@
       <ul id="attendees-list" class="mt-2 border rounded bg-surface dark:bg-surface-dark divide-y">
         {#each groups as group (group.key)}
           {#if attendees.filter(a => a.status === group.key).length}
-            <li class="px-4 py-2 font-semibold bg-gray-100 dark:bg-gray-800 {group.color}" key={group.key}>
+            <li class="px-4 py-2 font-semibold bg-gray-100 dark:bg-gray-800 {group.color}">
               <div class="flex flex-col items-start">
                 <span class="flex items-center">
                   <span>{group.label}</span>
@@ -36,13 +37,23 @@
             </li>
             {#each attendees.filter(a => a.status === group.key) as a (a.id)}
               <li class="px-4 py-2 flex flex-row items-center gap-4 justify-between">
-                <div class="flex  flex-row items-center  gap-4">
+                <div class="flex flex-row items-center gap-4">
                   <span class="font-medium">{a.name}</span>
                   {#if a.guests > 0}
                     <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? 's' : ''})</span>
                   {/if}
                 </div>
                 <span class="text-xs text-gray-400 ml-auto">{a.created_at ? new Date(a.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                <button
+                  type="button"
+                  class="ml-2 p-1 text-gray-400 hover:text-red-600 focus:outline-none"
+                  aria-label="Delete attendee"
+                  on:click={() => onDelete(a.id)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </li>
             {/each}
           {/if}
