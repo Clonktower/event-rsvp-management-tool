@@ -1,18 +1,18 @@
 <script lang="ts">
-	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
-	import Header from '$lib/Header.svelte';
-	import Footer from '$lib/Footer.svelte';
+  import "../app.css";
+  import favicon from "$lib/assets/favicon.svg";
+  import Header from "$lib/Header.svelte";
+  import Footer from "$lib/Footer.svelte";
 
-	let { children } = $props();
+  let { children } = $props();
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+  <link rel="icon" href={favicon} />
 </svelte:head>
 
 <Header />
-<div class="flex-1 flex flex-col">
+<div class="flex flex-1 flex-col">
   <main class="flex-1 px-2 sm:px-0">
     {@render children?.()}
   </main>

@@ -1,4 +1,4 @@
-export function getUserFromCookie(): {id: string, name: string} | undefined {
+export function getUserFromCookie(): { id: string; name: string } | undefined {
   const cookieMatch = document.cookie.match(/user_details=([^;]+)/);
   if (cookieMatch) {
     try {
@@ -9,4 +9,3 @@ export function getUserFromCookie(): {id: string, name: string} | undefined {
   }
   return undefined;
 }
-
