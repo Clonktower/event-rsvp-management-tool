@@ -1,8 +1,8 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 @config "../tailwind.config.js";
 
 body {
-  @apply bg-background dark:bg-background-dark transition-colors text-text dark:text-text-dark;
+  @apply bg-background text-text transition-colors dark:bg-background-dark dark:text-text-dark;
 }
