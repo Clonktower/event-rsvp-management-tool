@@ -1,8 +1,7 @@
 <script lang="ts">
   import type {RsvpStatus} from "../types/Rsvp";
 
-  export let rsvp: RsvpStatus
-  export let rsvpOptions: { value: RsvpStatus, label: string }[];
+  export let rsvp: RsvpStatus;
   export let attendeeName: string;
   export let guests: string;
   export let onSubmit: (e: Event) => void;
@@ -10,6 +9,11 @@
   export let onRSVPChange: (e: Event) => void;
   export let onGuestsChange: (e: Event) => void;
 
+  let rsvpOptions: { value: RsvpStatus, label: string }[] = [
+    { value: 'going', label: 'Going' },
+    { value: 'maybe', label: 'Maybe' },
+    { value: 'not_going', label: 'Not Going' }
+  ];
 </script>
 
 <form class="mt-6 flex flex-col gap-4" on:submit|preventDefault={onSubmit}>

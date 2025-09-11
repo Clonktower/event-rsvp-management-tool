@@ -2,51 +2,30 @@
   import type {RsvpStatus, Rsvp} from "../../../types/Rsvp";
   import type {Event} from "../../../types/Event";
   import { API_HOST } from '../../../utils/apiHost';
-  import { formatDate, toHumanTime } from '../../../utils/format';
+  import {formatDate, formatEventDuration} from '../../../utils/format';
   import { getUserFromCookie } from '../../../utils/getUserFromCookie';
   import AttendeeList from '$lib/AttendeeList.svelte';
   import RSVPForm from '$lib/RSVPForm.svelte';
   import { onMount } from 'svelte';
+  import {getTotalAttendance} from "../../../utils/getTotalAttendance";
 
-  export let data: { event: Event, rsvp: Rsvp[] };
-  const event = data.event;
-
-  let attendees = data.rsvp
-  let isRsvpFull = attendees.filter(a => a.status === 'going').reduce((sum, a) => sum + 1 + (a.guests || 0), 0) >= event.max_attendees
-  $: goingCount = attendees.filter(a => a.status === 'going').reduce((total, attendee) => total + 1 + (attendee.guests ?? 0), 0);
-
-  interface RSVPRequestBody {
+  type RSVPRequestBody = {
     name: string;
     status: typeof rsvp;
     guests: number;
     attendeeId?: string;
   }
 
-  let formattedDate = '';
-  if (event && event.date) {
-    formattedDate = formatDate(event.date);
-  }
+  export let data: { event: Event, rsvp: Rsvp[] };
+  const event = data.event;
 
-  let formattedTime = '';
-  if (event && event.start_time) {
-    formattedTime = toHumanTime(event.start_time);
-    if (event.end_time) {
-      formattedTime += ` - ${toHumanTime(event.end_time)}`;
-    }
-  }
+  let attendees = data.rsvp
+  $: goingCount = getTotalAttendance(attendees)
 
   let rsvp: RsvpStatus = 'going';
-  const rsvpOptions: {
-    value: RsvpStatus;
-    label: string;
-  }[] = [
-    { value: 'going', label: 'Going' },
-    { value: 'maybe', label: 'Maybe' },
-    { value: 'not_going', label: 'Not Going' }
-  ];
-
   let attendeeName = '';
   let guests = '0';
+  let showToast = false;
 
   onMount(() => {
     const attendeeId = getUserFromCookie()?.id;
@@ -94,9 +73,6 @@
     }
   }
 
-  let showToast = false;
-
-
 </script>
 
 {#if !event}
@@ -117,8 +93,8 @@
         </a>
       {/if}
     </h1>
-    <div class="mb-2"><span class="font-semibold">Date:</span> {formattedDate}</div>
-    <div class="mb-2"><span class="font-semibold">Time:</span> {formattedTime}</div>
+    <div class="mb-2"><span class="font-semibold">Date:</span> {formatDate(event.date)}</div>
+    <div class="mb-2"><span class="font-semibold">Time:</span> {formatEventDuration(event.start_time, event.end_time)}</div>
     <div class="mb-2"><span class="font-semibold">Location:</span> {event.location}</div>
     {#if event.max_attendees}
       <div class="mb-2"><span class="font-semibold">Currently going:</span> {goingCount}/{event.max_attendees}</div>
@@ -129,14 +105,12 @@
 
     <RSVPForm
       rsvp={rsvp}
-      rsvpOptions={rsvpOptions}
       bind:attendeeName
       bind:guests
       onSubmit={handleRSVPSubmit}
       onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
       onRSVPChange={(e) => rsvp = (e.target as HTMLInputElement)?.value as RsvpStatus}
       onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
-      isRsvpFull={isRsvpFull}
     />
 
     {#if showToast}
