@@ -36,3 +36,18 @@ export function getRsvpByEventId(eventId: string) {
 export function deleteRsvpById(id: string) {
   return db.prepare('DELETE FROM rsvp WHERE id = ?').run(id);
 }
+
+export function updateRsvpByToken({ eventId, rsvpId, token, name, status, guests }: {
+  eventId: string,
+  rsvpId: string,
+  token: string,
+  name: string,
+  status: string,
+  guests: number
+}) {
+  const sql = `UPDATE rsvp SET name = ?, status = ?, guests = ?, updated_at = ? WHERE id = ? AND event_id = ? AND token = ?`;
+  const now = new Date().toISOString();
+  const result = db.prepare(sql).run(name, status, guests, now, rsvpId, eventId, token);
+  if (result.changes === 0) return null;
+  return db.prepare('SELECT * FROM rsvp WHERE id = ? AND event_id = ?').get(rsvpId, eventId);
+}

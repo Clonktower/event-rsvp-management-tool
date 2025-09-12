@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import {rsvpToEventServiceLegacy, deleteRsvpById, rsvpToEventService } from "../services/rsvp";
+import { rsvpToEventServiceLegacy, deleteRsvpById, rsvpToEventService, updateRsvpByToken } from "../services/rsvp";
 
-const legacyEventIds: string[]  = []
+const legacyEventIds: string[]  = ["fe7e8308-386d-499d-bc74-dfaf21e34a9f"]
 
 export const rsvpToEvent = async (req: Request, res: Response, next: Function) => {
   try {
@@ -42,7 +42,25 @@ export const deleteRsvp = async (req: Request, res: Response, next: Function) =>
   }
 };
 
+export const updateRsvpByTokenController = async (req: Request, res: Response, next: Function) => {
+  try {
+    const { id: eventId, rsvpId } = req.params;
+    const { token, name, status, guests } = req.body;
+    if (!token || !name || !status === undefined) {
+      return res.status(400).json({ error: "Token, name, status, and guests are required." });
+    }
+    const updated = updateRsvpByToken({ eventId, rsvpId, token, name, status, guests });
+    if (!updated) {
+      return res.status(404).json({ error: "RSVP not found or token invalid." });
+    }
+    res.status(200).json({ message: "RSVP updated!", rsvp: updated });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const rsvpController = {
   rsvpToEvent,
   deleteRsvp,
+  updateRsvpByTokenController,
 };
