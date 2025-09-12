@@ -148,7 +148,7 @@
       />
     {:else if status !== undefined}
       <div class="mb-4 flex w-full items-center justify-center">
-        <div class="relative w-full rounded px-4 py-2 text-lg font-semibold flex items-center bg-blue-100 dark:bg-blue-300 text-blue-900 dark:text-blue-800">
+        <div class="relative w-full rounded px-4 py-2  font-semibold flex items-center bg-blue-100 dark:bg-blue-300 text-blue-900 dark:text-blue-800">
           <span>
             You are marked as
             <span class="px-1 py-1 rounded font-bold"
