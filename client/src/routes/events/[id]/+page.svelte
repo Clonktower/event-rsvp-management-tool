@@ -18,6 +18,7 @@
     status: typeof rsvp;
     guests: number;
     attendeeId?: string;
+    token?: string
   };
 
   export let data: { event: Event; rsvp: Rsvp[] };
@@ -85,41 +86,50 @@
   }
 
   async function handleRsvpSubmit() {
-    if (!attendeeName.trim()) return;
-
-    if (user?.id) {
-      // todo: patch request
-    } else {
+    try {
+      if (!attendeeName.trim()) return;
       const body: RSVPRequestBody = {
         name: attendeeName,
         status: rsvp,
         guests: rsvp === "going" ? Number(guests) : 0,
+        token: user?.token
       };
 
-      const response = await fetch(`${API_HOST}/events/${event.id}/rsvp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      if (user?.id) {
+        await fetch(`${API_HOST}/events/${event.id}/rsvp/${user.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } else {
+        const response = await fetch(`${API_HOST}/events/${event.id}/rsvp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
+        if (response.ok) {
+          const data = await response.json();
 
-        if(data.rsvp) {
-          updateMyEvents(data.rsvp)
+          if(data.rsvp) {
+            updateMyEvents(data.rsvp)
+          }
         }
-        // Refetch event and attendee list
-        const refetchRes = await fetch(`${API_HOST}/events/${event.id}`);
-        if (refetchRes.ok) {
-          const refetchData = await refetchRes.json();
-          attendees = refetchData.rsvp;
-        }
-
-        isFormVisible = false;
-        status = rsvp;
-        showToast = true;
-        setTimeout(() => (showToast = false), 2000);
       }
+
+      // Refetch event and attendee list
+      const refetchRes = await fetch(`${API_HOST}/events/${event.id}`);
+      if (refetchRes.ok) {
+        const refetchData = await refetchRes.json();
+        attendees = refetchData.rsvp;
+      }
+
+      isFormVisible = false;
+      status = rsvp;
+      showToast = true;
+      setTimeout(() => (showToast = false), 2000);
+    } catch (err) {
+      console.error(err)
     }
   }
 

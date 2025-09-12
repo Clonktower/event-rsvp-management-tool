@@ -46,6 +46,7 @@ export const updateRsvpByTokenController = async (req: Request, res: Response, n
   try {
     const { id: eventId, rsvpId } = req.params;
     const { token, name, status, guests } = req.body;
+    console.log(req.body, req.params)
     if (!token || !name || !status === undefined) {
       return res.status(400).json({ error: "Token, name, status, and guests are required." });
     }

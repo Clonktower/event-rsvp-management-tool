@@ -8,16 +8,16 @@ export const updateMyEvents = (rsvp: Rsvp) => {
   if (myEvents) {
     const parsedEvents = JSON.parse(myEvents) as MyEvents;
 
-    if (parsedEvents[rsvp.eventId]) {
-      parsedEvents[rsvp.eventId].push(rsvpDetails);
+    if (parsedEvents[rsvp.event_id]) {
+      parsedEvents[rsvp.event_id].push(rsvpDetails);
     } else {
-      parsedEvents[rsvp.eventId] = [rsvpDetails];
+      parsedEvents[rsvp.event_id] = [rsvpDetails];
     }
   } else {
     localStorage.setItem(
       "my_events",
       JSON.stringify({
-        [rsvp.eventId]: [rsvpDetails],
+        [rsvp.event_id]: [rsvpDetails],
       }),
     );
   }
