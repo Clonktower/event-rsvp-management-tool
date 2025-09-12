@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
-import { rsvpToEventService, deleteRsvpById } from "../services/rsvp";
+import {rsvpToEventServiceLegacy, deleteRsvpById, rsvpToEventService } from "../services/rsvp";
+
+const legacyEventIds: string[]  = []
 
 export const rsvpToEvent = async (req: Request, res: Response, next: Function) => {
   try {
-    const { id } = req.params;
+    const { id: eventId } = req.params;
     let { attendeeId, name, status, guests } = req.body;
     if (!name || !status) {
       return res.status(400).json({ error: "Name and RSVP status are required." });
@@ -12,8 +14,15 @@ export const rsvpToEvent = async (req: Request, res: Response, next: Function) =
       // Generate a new UUID for attendeeId if not provided
       attendeeId = require('uuid').v4();
     }
-    const rsvp = await rsvpToEventService({ eventId: id, attendeeId, name, status, guests });
-    res.status(201).json({ message: "RSVP recorded!", rsvp });
+
+    if(eventId in legacyEventIds) {
+      const rsvp = await rsvpToEventServiceLegacy({ eventId, attendeeId, name, status, guests });
+      res.status(201).json({ message: "RSVP recorded!", rsvp });
+    } else {
+      const rsvp = await rsvpToEventService({ id: attendeeId, eventId, name, status, guests });
+      res.status(201).json({ message: "RSVP recorded!", rsvp });
+    }
+
   } catch (err) {
     next(err);
   }
