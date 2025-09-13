@@ -1,5 +1,16 @@
 import db from './index';
 
+// Migration: Add token column to rsvp if missing
+function migrationAddTokenColumnToRsvp() {
+  type PragmaColumn = { name: string };
+  const pragma = db.prepare("PRAGMA table_info(rsvp);").all() as PragmaColumn[];
+  const hasToken = pragma.some(col => col.name === 'token');
+  if (!hasToken) {
+    db.prepare("ALTER TABLE rsvp ADD COLUMN token TEXT NOT NULL DEFAULT 'legacy';").run();
+    console.log("Added 'token' column to rsvp table.");
+  }
+}
+
 // Seeds the SQLite database with required tables
 export default function seed() {
   try {
@@ -27,10 +38,13 @@ export default function seed() {
         guests INTEGER DEFAULT 0,
         created_at DATETIME NOT NULL DEFAULT (datetime('now')),
         updated_at DATETIME NOT NULL DEFAULT (datetime('now')),
+        token TEXT NOT NULL DEFAULT 'legacy',
         UNIQUE(event_id, id),
         FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
       );
     `).run();
+
+    migrationAddTokenColumnToRsvp();
 
     console.log('Tables created successfully!');
   } catch (err) {
