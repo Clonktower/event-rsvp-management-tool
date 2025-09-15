@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { rsvpToEventServiceLegacy, deleteRsvpById, rsvpToEventService, updateRsvpByToken } from "../services/rsvp";
+import { isValidStatus } from "../validators/isValidStatus";
 
 const legacyEventIds: string[]  = [
   "fe7e8308-386d-499d-bc74-dfaf21e34a9f", // local dev
@@ -11,9 +12,15 @@ export const rsvpToEvent = async (req: Request, res: Response, next: Function) =
   try {
     const { id: eventId } = req.params;
     let { attendeeId, name, status, guests } = req.body;
+
     if (!name || !status) {
       return res.status(400).json({ error: "Name and RSVP status are required." });
     }
+
+    if(!isValidStatus(status)) {
+      return res.status(400).json({ error: "Invalid RSVP status. Must be 'going', 'not_going', or 'maybe'." });
+    }
+
     if (!attendeeId) {
       // Generate a new UUID for attendeeId if not provided
       attendeeId = require('uuid').v4();
@@ -50,10 +57,15 @@ export const updateRsvpByTokenController = async (req: Request, res: Response, n
   try {
     const { id: eventId, rsvpId } = req.params;
     const { token, name, status, guests } = req.body;
-    console.log(req.body, req.params)
-    if (!token || !name || !status === undefined) {
+
+    if (!token || !name || !status) {
       return res.status(400).json({ error: "Token, name, status, and guests are required." });
     }
+
+    if(!isValidStatus(status)) {
+      return res.status(400).json({ error: "Invalid RSVP status. Must be 'going', 'not_going', or 'maybe'." });
+    }
+
     const updated = updateRsvpByToken({ eventId, rsvpId, token, name, status, guests });
     if (!updated) {
       return res.status(404).json({ error: "RSVP not found or token invalid." });
