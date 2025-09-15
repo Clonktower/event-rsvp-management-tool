@@ -12,7 +12,8 @@ export function getUser(eventId: string): User | undefined {
       }
     }
   } else {
-    const userDetails = JSON.parse(localStorage.getItem("my_events") ?? "{}");
+    const userDetails =
+      JSON.parse(localStorage.getItem("my_events") ?? "{}") ?? {};
 
     // for now since in the ui there is no way to sign up multiple users from same browser
     // simply return the first user but in future we might need a better ui to be able to select users

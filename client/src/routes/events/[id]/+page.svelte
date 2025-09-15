@@ -11,7 +11,7 @@
   import { hasUserResponded } from "../../../utils/hasUserResponded";
   import {legacyEventIds} from "../../../constants/legacyEventIds";
   import type {User} from "../../../types/User";
-  import {updateMyEvents} from "../../../utils/updateMyEvents";
+  import {addNewRsvp} from "../../../utils/addNewRsvp";
 
   type RSVPRequestBody = {
     name: string;
@@ -112,7 +112,7 @@
           const data = await response.json();
 
           if(data.rsvp) {
-            updateMyEvents(data.rsvp)
+            addNewRsvp(data.rsvp)
           }
         }
       }
