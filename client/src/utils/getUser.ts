@@ -16,7 +16,7 @@ export function getUser(eventId: string): User | undefined {
       JSON.parse(localStorage.getItem("my_events") ?? "{}") ?? {};
     const eventDetails = userDetails?.[eventId];
 
-    if (Object.keys(eventDetails).length) {
+    if (Object.keys(eventDetails ?? {}).length) {
       return {
         id: Object.keys(eventDetails)[0],
         token: Object.values(eventDetails)[0] as string,

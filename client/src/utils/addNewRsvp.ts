@@ -16,11 +16,13 @@ export const addNewRsvp = (rsvp: Rsvp) => {
     } else {
       parsedEvents[rsvp.event_id] = rsvpDetails;
     }
+
+    localStorage.setItem("my_events", JSON.stringify(parsedEvents));
   } else {
     localStorage.setItem(
       "my_events",
       JSON.stringify({
-        [rsvp.event_id]: [rsvpDetails],
+        [rsvp.event_id]: rsvpDetails,
       }),
     );
   }
