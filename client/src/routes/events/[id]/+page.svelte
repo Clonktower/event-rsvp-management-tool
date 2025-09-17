@@ -37,7 +37,6 @@
 
   onMount(() => {
     user = getUser(event.id)
-
     if (user?.id) {
       const found = attendees.find((a) => a.id === user?.id);
       if (found) {
@@ -196,7 +195,7 @@
         {rsvp}
         bind:attendeeName
         bind:guests
-        onSubmit={event.id in legacyEventIds ? handleRSVPSubmitLegacy : handleRsvpSubmit}
+        onSubmit={legacyEventIds.includes(event.id) ? handleRSVPSubmitLegacy : handleRsvpSubmit}
         onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
         onRSVPChange={(e) => rsvp = (e.target as HTMLInputElement)?.value as RsvpStatus}
         onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
