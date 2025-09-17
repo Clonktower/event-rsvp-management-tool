@@ -2,7 +2,7 @@ import { legacyEventIds } from "../constants/legacyEventIds";
 import type { User } from "../types/User";
 
 export function getUser(eventId: string): User | undefined {
-  if (eventId in legacyEventIds) {
+  if (legacyEventIds.includes(eventId)) {
     const cookieMatch = document.cookie.match(/user_details=([^;]+)/);
     if (cookieMatch) {
       try {

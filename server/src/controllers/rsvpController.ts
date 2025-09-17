@@ -26,7 +26,7 @@ export const rsvpToEvent = async (req: Request, res: Response, next: Function) =
       attendeeId = require('uuid').v4();
     }
 
-    if(eventId in legacyEventIds) {
+    if(legacyEventIds.includes(eventId)) {
       const rsvp = await rsvpToEventServiceLegacy({ eventId, attendeeId, name, status, guests });
       res.status(201).json({ message: "RSVP recorded!", rsvp });
     } else {
