@@ -3,18 +3,22 @@
   import type { Event } from "../../../types/Event";
   import { API_HOST } from "../../../utils/apiHost";
   import { formatDate, formatEventDuration } from "../../../utils/format";
-  import { getUserFromCookie } from "../../../utils/getUserFromCookie";
+  import { getUser } from "../../../utils/getUser";
   import AttendeeList from "$lib/AttendeeList.svelte";
   import RSVPForm from "$lib/RSVPForm.svelte";
   import { onMount } from "svelte";
   import { getTotalAttendance } from "../../../utils/getTotalAttendance";
   import { hasUserResponded } from "../../../utils/hasUserResponded";
+  import {legacyEventIds} from "../../../constants/legacyEventIds";
+  import type {User} from "../../../types/User";
+  import {addNewRsvp} from "../../../utils/addNewRsvp";
 
   type RSVPRequestBody = {
     name: string;
     status: typeof rsvp;
     guests: number;
     attendeeId?: string;
+    token?: string
   };
 
   export let data: { event: Event; rsvp: Rsvp[] };
@@ -27,14 +31,14 @@
   let attendeeName = "";
   let guests = "0";
   let showToast = false;
-  let { hasResponded, status } = hasUserResponded(attendees)
+  let { hasResponded, status } = hasUserResponded(event.id, attendees)
   let isFormVisible = !hasResponded
+  let user: User | undefined;
 
   onMount(() => {
-    const attendeeId = getUserFromCookie()?.id;
-
-    if (attendeeId) {
-      const found = attendees.find((a) => a.id === attendeeId);
+    user = getUser(event.id)
+    if (user?.id) {
+      const found = attendees.find((a) => a.id === user?.id);
       if (found) {
         attendeeName = found.name;
         rsvp = found.status;
@@ -43,9 +47,9 @@
     }
   });
 
-  async function handleRSVPSubmit() {
+  async function handleRSVPSubmitLegacy() {
     if (!attendeeName.trim()) return;
-    const userDetails = getUserFromCookie();
+    const userDetails = getUser(event.id);
     let attendeeId =
       attendees.find((a) => a.id === userDetails?.id)?.id ?? undefined;
 
@@ -79,6 +83,56 @@
       setTimeout(() => (showToast = false), 2000);
     }
   }
+
+  async function handleRsvpSubmit() {
+    try {
+      if (!attendeeName.trim()) return;
+      const body: RSVPRequestBody = {
+        name: attendeeName,
+        status: rsvp,
+        guests: rsvp === "going" ? Number(guests) : 0,
+        token: user?.token
+      };
+
+      if (user?.id) {
+        await fetch(`${API_HOST}/events/${event.id}/rsvp/${user.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } else {
+        const response = await fetch(`${API_HOST}/events/${event.id}/rsvp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if(data.rsvp) {
+            addNewRsvp(data.rsvp)
+          }
+        }
+      }
+
+      // Refetch event and attendee list
+      const refetchRes = await fetch(`${API_HOST}/events/${event.id}`);
+      if (refetchRes.ok) {
+        const refetchData = await refetchRes.json();
+        attendees = refetchData.rsvp;
+      }
+
+      isFormVisible = false;
+      status = rsvp;
+      showToast = true;
+      setTimeout(() => (showToast = false), 2000);
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+
 </script>
 
 {#if !event}
@@ -141,7 +195,7 @@
         {rsvp}
         bind:attendeeName
         bind:guests
-        onSubmit={handleRSVPSubmit}
+        onSubmit={legacyEventIds.includes(event.id) ? handleRSVPSubmitLegacy : handleRsvpSubmit}
         onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
         onRSVPChange={(e) => rsvp = (e.target as HTMLInputElement)?.value as RsvpStatus}
         onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}

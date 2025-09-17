@@ -1,11 +1,11 @@
 import type { Rsvp } from "../types/Rsvp";
-import { getUserFromCookie } from "./getUserFromCookie";
+import { getUser } from "./getUser";
 
-export const hasUserResponded = (attendees: Rsvp[]) => {
+export const hasUserResponded = (eventId: string, attendees: Rsvp[]) => {
   if (typeof document === "undefined")
     return { hasResponded: false, status: undefined };
 
-  const attendeeId = getUserFromCookie()?.id;
+  const attendeeId = getUser(eventId)?.id;
 
   if (!attendeeId) return { hasResponded: false, status: undefined };
 
