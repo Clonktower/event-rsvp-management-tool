@@ -14,9 +14,13 @@ export function getUser(eventId: string): User | undefined {
   } else {
     const userDetails =
       JSON.parse(localStorage.getItem("my_events") ?? "{}") ?? {};
+    const eventDetails = userDetails?.[eventId];
 
-    // for now since in the ui there is no way to sign up multiple users from same browser
-    // simply return the first user but in future we might need a better ui to be able to select users
-    return userDetails?.[eventId]?.[0] as User;
+    if (Object.keys(eventDetails).length) {
+      return {
+        id: Object.keys(eventDetails)[0],
+        token: Object.values(eventDetails)[0] as string,
+      };
+    }
   }
 }

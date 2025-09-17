@@ -1,3 +1,1 @@
-import type { User } from "./User";
-
-export type MyEvents = Record<string, User[]>;
+export type MyEvents = Record<string, Record<string, string>>;
