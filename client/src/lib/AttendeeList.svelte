@@ -4,6 +4,7 @@
   export let attendees: Rsvp[] = [];
   let attendeesOpen = false;
   export let onDelete: (id: string) => void = () => {};
+  export let showDeleteButton: boolean = true;
 
   const groups = [
     {
@@ -124,16 +125,18 @@
                 <span class="ml-auto text-xs text-gray-400"
                   >{a.created_at ? formatRsvpTime(a.created_at) : ""}</span
                 >
-                <button
-                  type="button"
-                  class="ml-2 p-1 text-gray-400 hover:text-red-600 focus:outline-none"
-                  aria-label="Delete attendee"
-                  on:click={() => onDelete(a.id)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                {#if showDeleteButton}
+                  <button
+                    type="button"
+                    class="ml-2 p-1 text-gray-400 hover:text-red-600 focus:outline-none"
+                    aria-label="Delete attendee"
+                    on:click={() => onDelete(a.id)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                {/if}
               </li>
             {/each}
           {/if}

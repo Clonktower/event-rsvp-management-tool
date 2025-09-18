@@ -37,6 +37,7 @@
   let { hasResponded, status } = hasUserResponded(event.id, attendees)
   let isFormVisible = !hasResponded
   let user: User | undefined;
+  let isAdmin = false;
 
   onMount(() => {
     user = getUser(event.id)
@@ -48,6 +49,11 @@
         guests = found.guests ? String(found.guests) : "0";
       }
     }
+    adminFetch(`${API_HOST}/admin/login`, { method: 'POST' }).then(res => {
+      isAdmin = res.ok;
+    }).catch(() => {
+      isAdmin = false;
+    });
   });
 
   async function handleRSVPSubmitLegacy() {
@@ -136,6 +142,9 @@
   }
 
   async function onDeleteAttendee(id: string) {
+    if (!window.confirm('Are you sure you want to delete this attendee? This operation is not reversible.')) {
+      return;
+    }
     deleteError = '';
     try {
       const res = await adminFetch(`${API_HOST}/admin/events/rsvp/${id}`, { method: 'DELETE' });
@@ -206,7 +215,7 @@
       </div>
     {/if}
 
-    <AttendeeList {attendees} onDelete={onDeleteAttendee} />
+    <AttendeeList {attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
 
     {#if isFormVisible}
       <RSVPForm
@@ -252,10 +261,10 @@
       </div>
     {/if}
     {#if showDeleteToast}
-      <div class="w-full text-center bg-green-600 text-white py-2 rounded mb-2">Attendee deleted!</div>
+      <div class="w-full text-center bg-green-600 text-white py-2 rounded mb-2 mt-5">Attendee deleted!</div>
     {/if}
     {#if deleteError}
-      <div class="w-full text-center bg-red-600 text-white py-2 rounded mb-2">{deleteError}</div>
+      <div class="w-full text-center bg-red-600 text-white py-2 rounded mb-2 mt-5">{deleteError}</div>
     {/if}
   </div>
 {/if}
