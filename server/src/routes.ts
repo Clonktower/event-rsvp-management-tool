@@ -15,5 +15,6 @@ router.delete("/admin/events/rsvp/:id", authenticateAdmin, rsvpController.delete
 // Public routes
 router.get("/events/:id", eventController.getEventById);
 router.post("/events/:id/rsvp", rsvpController.rsvpToEvent);
+router.patch("/events/:id/rsvp/:rsvpId", rsvpController.updateRsvpByTokenController);
 
 export default router;

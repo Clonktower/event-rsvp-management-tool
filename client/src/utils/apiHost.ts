@@ -1,3 +1,5 @@
-const isProd = import.meta.env.MODE === 'production';
+const isProd = import.meta.env.MODE === "production";
 
-export const API_HOST = isProd ? 'https://api.rsvp.clonktower.de' : 'http://localhost:3000';
+export const API_HOST = isProd
+  ? "https://api.rsvp.clonktower.de"
+  : "http://localhost:3000";

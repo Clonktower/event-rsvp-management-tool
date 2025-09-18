@@ -1,8 +1,9 @@
 <script lang="ts">
-// No props needed for now
+  // No props needed for now
 </script>
 
-<footer class="w-full text-center py-4 font-inter text-sm bg-background-dark/90 dark:bg-gray-900 text-text-light backdrop-blur-md shadow-sm">
+<footer
+  class="w-full bg-background-dark/90 py-4 text-center font-inter text-sm text-text-light shadow-sm backdrop-blur-md dark:bg-gray-900"
+>
   Made with <span class="text-red-500">♥</span> by Hemang and Miguel
 </footer>
-
