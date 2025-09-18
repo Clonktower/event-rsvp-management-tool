@@ -35,3 +35,22 @@ export function updateRsvpByToken({ eventId, rsvpId, token, name, status, guests
   if (result.changes === 0) return null;
   return db.prepare('SELECT * FROM rsvp WHERE id = ? AND event_id = ?').get(rsvpId, eventId);
 }
+
+export async function getMyRsvpsService(pairs: { rsvpId: string, eventId: string }[]) {
+  if (!Array.isArray(pairs) || pairs.length === 0) return [];
+
+  const wherePairs = pairs.map(() => '(?, ?)').join(', ');
+  const flatParams = pairs.flatMap(({ rsvpId, eventId }) => [rsvpId, eventId]);
+  const sql = `
+    SELECT e.*, r.status as your_status
+    FROM rsvp r
+    JOIN events e ON r.event_id = e.id
+    WHERE (r.id, r.event_id) IN (${wherePairs})
+  `;
+  const rows = db.prepare(sql).all(...flatParams);
+  // Return as { event, yourStatus }
+  return rows.map(row => {
+    const { your_status, ...event } = row as any;
+    return { event, yourStatus: your_status };
+  });
+}

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import { rsvpToEventServiceLegacy, deleteRsvpById, rsvpToEventService, updateRsvpByToken } from "../services/rsvp";
+import { deleteRsvpById, rsvpToEventService, updateRsvpByToken } from "../services/rsvp";
 import { isValidStatus } from "../validators/isValidStatus";
+import { getMyRsvpsService } from '../services/rsvp';
 
 
 export const rsvpToEvent = async (req: Request, res: Response, next: Function) => {
@@ -65,8 +66,24 @@ export const updateRsvpByTokenController = async (req: Request, res: Response, n
   }
 };
 
+export const getMyRsvps = async (req: Request, res: Response, next: Function) => {
+  try {
+    const pairs = req.body.myRsvps;
+
+    if (!Array.isArray(pairs)) {
+      return res.status(400).json({ error: 'Request body must be an array of {rsvpId, eventId} objects.' });
+    }
+
+    const results = await getMyRsvpsService(pairs);
+    res.status(200).json({ rsvps: results.filter(Boolean) });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const rsvpController = {
   rsvpToEvent,
   deleteRsvp,
   updateRsvpByTokenController,
+  getMyRsvps
 };
