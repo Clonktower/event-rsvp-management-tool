@@ -12,6 +12,7 @@
   import {legacyEventIds} from "../../../constants/legacyEventIds";
   import type {User} from "../../../types/User";
   import {addNewRsvp} from "../../../utils/addNewRsvp";
+  import {adminFetch} from "../../../utils/adminFetch";
 
   type RSVPRequestBody = {
     name: string;
