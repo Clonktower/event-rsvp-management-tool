@@ -2,11 +2,6 @@ import { Request, Response } from "express";
 import { rsvpToEventServiceLegacy, deleteRsvpById, rsvpToEventService, updateRsvpByToken } from "../services/rsvp";
 import { isValidStatus } from "../validators/isValidStatus";
 
-const legacyEventIds: string[]  = [
-  "fe7e8308-386d-499d-bc74-dfaf21e34a9f", // local dev
-  "da6722ce-3ff5-49ff-b6ea-8a615f454ee8", // TU
-  "46da7671-9bd3-44c2-a34e-5ec2caaeed88", // PROD test
-]
 
 export const rsvpToEvent = async (req: Request, res: Response, next: Function) => {
   try {
@@ -26,14 +21,8 @@ export const rsvpToEvent = async (req: Request, res: Response, next: Function) =
       attendeeId = require('uuid').v4();
     }
 
-    if(legacyEventIds.includes(eventId)) {
-      const rsvp = await rsvpToEventServiceLegacy({ eventId, attendeeId, name, status, guests });
-      res.status(201).json({ message: "RSVP recorded!", rsvp });
-    } else {
-      const rsvp = await rsvpToEventService({ id: attendeeId, eventId, name, status, guests });
-      res.status(201).json({ message: "RSVP recorded!", rsvp });
-    }
-
+    const rsvp = await rsvpToEventService({ id: attendeeId, eventId, name, status, guests });
+    res.status(201).json({ message: "RSVP recorded!", rsvp });
   } catch (err) {
     next(err);
   }

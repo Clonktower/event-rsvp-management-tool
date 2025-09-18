@@ -9,7 +9,6 @@
   import { onMount } from "svelte";
   import { getTotalAttendance } from "../../../utils/getTotalAttendance";
   import { hasUserResponded } from "../../../utils/hasUserResponded";
-  import {legacyEventIds} from "../../../constants/legacyEventIds";
   import type {User} from "../../../types/User";
   import {addNewRsvp} from "../../../utils/addNewRsvp";
   import {adminFetch} from "../../../utils/adminFetch";
@@ -55,43 +54,6 @@
       isAdmin = false;
     });
   });
-
-  async function handleRSVPSubmitLegacy() {
-    if (!attendeeName.trim()) return;
-    const userDetails = getUser(event.id);
-    let attendeeId =
-      attendees.find((a) => a.id === userDetails?.id)?.id ?? undefined;
-
-    const body: RSVPRequestBody = {
-      name: attendeeName,
-      status: rsvp,
-      guests: rsvp === "going" ? Number(guests) : 0,
-    };
-    if (attendeeId) body.attendeeId = attendeeId;
-    const response = await fetch(`${API_HOST}/events/${event.id}/rsvp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.rsvp && data.rsvp.id && data.rsvp.name) {
-        document.cookie = `user_details=${encodeURIComponent(JSON.stringify({ id: data.rsvp.id, name: data.rsvp.name }))}; path=/;`;
-      }
-      // Refetch event and attendee list
-      const refetchRes = await fetch(`${API_HOST}/events/${event.id}`);
-      if (refetchRes.ok) {
-        const refetchData = await refetchRes.json();
-        attendees = refetchData.rsvp;
-      }
-
-      isFormVisible = false;
-      status = rsvp;
-      showToast = true;
-      setTimeout(() => (showToast = false), 2000);
-    }
-  }
 
   async function handleRsvpSubmit() {
     try {
@@ -222,7 +184,7 @@
         {rsvp}
         bind:attendeeName
         bind:guests
-        onSubmit={legacyEventIds.includes(event.id) ? handleRSVPSubmitLegacy : handleRsvpSubmit}
+        onSubmit={handleRsvpSubmit}
         onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
         onRSVPChange={(e) => rsvp = (e.target as HTMLInputElement)?.value as RsvpStatus}
         onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
