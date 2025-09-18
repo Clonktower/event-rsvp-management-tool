@@ -12,6 +12,7 @@
   import {legacyEventIds} from "../../../constants/legacyEventIds";
   import type {User} from "../../../types/User";
   import {addNewRsvp} from "../../../utils/addNewRsvp";
+  import {adminFetch} from "../../../utils/adminFetch";
 
   type RSVPRequestBody = {
     name: string;
@@ -31,9 +32,12 @@
   let attendeeName = "";
   let guests = "0";
   let showToast = false;
+  let showDeleteToast = false;
+  let deleteError = '';
   let { hasResponded, status } = hasUserResponded(event.id, attendees)
   let isFormVisible = !hasResponded
   let user: User | undefined;
+  let isAdmin = false;
 
   onMount(() => {
     user = getUser(event.id)
@@ -45,6 +49,11 @@
         guests = found.guests ? String(found.guests) : "0";
       }
     }
+    adminFetch(`${API_HOST}/admin/login`, { method: 'POST' }).then(res => {
+      isAdmin = res.ok;
+    }).catch(() => {
+      isAdmin = false;
+    });
   });
 
   async function handleRSVPSubmitLegacy() {
@@ -132,6 +141,24 @@
     }
   }
 
+  async function onDeleteAttendee(id: string) {
+    if (!window.confirm('Are you sure you want to delete this attendee? This operation is not reversible.')) {
+      return;
+    }
+    deleteError = '';
+    try {
+      const res = await adminFetch(`${API_HOST}/admin/events/rsvp/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        attendees = attendees.filter(a => a.id !== id);
+        showDeleteToast = true;
+        setTimeout(() => showDeleteToast = false, 2000);
+      } else {
+        deleteError = 'Failed to delete attendee.';
+      }
+    } catch (_) {
+      deleteError = 'Error deleting attendee.';
+    }
+  }
 
 </script>
 
@@ -188,7 +215,7 @@
       </div>
     {/if}
 
-    <AttendeeList {attendees} />
+    <AttendeeList {attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
 
     {#if isFormVisible}
       <RSVPForm
@@ -232,6 +259,12 @@
           Your response was saved!
         </div>
       </div>
+    {/if}
+    {#if showDeleteToast}
+      <div class="w-full text-center bg-green-600 text-white py-2 rounded mb-2 mt-5">Attendee deleted!</div>
+    {/if}
+    {#if deleteError}
+      <div class="w-full text-center bg-red-600 text-white py-2 rounded mb-2 mt-5">{deleteError}</div>
     {/if}
   </div>
 {/if}
