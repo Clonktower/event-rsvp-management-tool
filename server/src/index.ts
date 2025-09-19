@@ -15,7 +15,7 @@ const port = config.PORT;
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per request window
+  limit: 500, // Limit each IP to 100 requests per request window
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   ipv6Subnet: 56,
