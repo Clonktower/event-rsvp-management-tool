@@ -181,12 +181,11 @@
 
     {#if isFormVisible}
       <RSVPForm
-        {rsvp}
+        bind:rsvp
         bind:attendeeName
         bind:guests
-        onSubmit={handleRsvpSubmit}
+        onSubmit={ handleRsvpSubmit}
         onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
-        onRSVPChange={(e) => rsvp = (e.target as HTMLInputElement)?.value as RsvpStatus}
         onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
       />
     {:else if status !== undefined}

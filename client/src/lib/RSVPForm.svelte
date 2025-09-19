@@ -6,7 +6,6 @@
   export let guests: string;
   export let onSubmit: (e: Event) => void;
   export let onNameInput: (e: Event) => void;
-  export let onRSVPChange: (e: Event) => void;
   export let onGuestsChange: (e: Event) => void;
 
   let rsvpOptions: { value: RsvpStatus; label: string }[] = [
@@ -36,19 +35,22 @@
   </div>
 
   <div class="flex items-center gap-4">
-    <span class="font-semibold">RSVP:</span>
-    <div class="flex gap-2">
+
+    <div class="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
       {#each rsvpOptions as opt (opt.value)}
-        <label class="inline-flex cursor-pointer items-center">
-          <input
-            type="radio"
-            class="form-radio bg-white accent-primary dark:bg-background-dark"
-            bind:group={rsvp}
-            value={opt.value}
-            on:change={onRSVPChange}
-          />
-          <span class="ml-1">{opt.label}</span>
-        </label>
+        <button
+          type="button"
+          class="px-4 py-2 focus:outline-none focus:z-10 text-sm font-semibold transition-colors
+            {rsvp === opt.value && opt.value === 'going' ? 'bg-green-800 text-white' : ''}
+            {rsvp === opt.value && opt.value === 'maybe' ? 'bg-yellow-800 text-white' : ''}
+            {rsvp === opt.value && opt.value === 'not_going' ? 'bg-red-800 text-white' : ''}
+            {rsvp !== opt.value ? 'bg-transparent text-gray-700 dark:text-gray-200' : ''}
+            {opt.value !== 'not_going' ? 'border-r border-gray-300 dark:border-gray-700' : ''}"
+          aria-pressed={rsvp === opt.value}
+          on:click={() => { rsvp = opt.value; }}
+        >
+          {opt.label}
+        </button>
       {/each}
     </div>
   </div>
