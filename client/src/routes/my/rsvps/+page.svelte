@@ -4,6 +4,7 @@ import { getMyRsvps } from '../../../utils/getMyRsvps';
 import {API_HOST} from "../../../utils/apiHost";
 import type {RsvpStatus} from "../../../types/Rsvp";
 import type {Event} from "../../../types/Event";
+import {formatDate} from "../../../utils/format";
 
 let hasRsvps = true;
 let loading = true;
@@ -41,7 +42,7 @@ onMount(async () => {
       <span class="text-lg text-gray-500">You Haven't RSVP'd to any events</span>
     {:else}
       <div class="w-full flex flex-col items-center gap-4">
-        {#each rsvps as { event, yourStatus }, i (event.id)}
+        {#each rsvps as { event, yourStatus }, i (event.id + i)}
           <a
             href={`/events/${event.id}`}
             class="w-full max-w-md bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-5 flex flex-col gap-2 transition hover:shadow-lg hover:ring-2 hover:ring-primary cursor-pointer focus:outline-none {i === rsvps.length - 1 ? 'mb-5' : ''}"
@@ -55,7 +56,7 @@ onMount(async () => {
               </span>
             </div>
             <div class="text-gray-600 dark:text-gray-300 text-sm">
-              <span class="font-medium">Date:</span> {event.date}<br />
+              <span class="font-medium">Date:</span> {formatDate(event.date)}<br />
               <span class="font-medium">Time:</span> {event.start_time} - {event.end_time}<br />
               <span class="font-medium">Location:</span> {event.location}
             </div>
