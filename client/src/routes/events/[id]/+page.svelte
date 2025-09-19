@@ -84,7 +84,10 @@
 
           if(data.rsvp) {
             addNewRsvp(data.rsvp)
+            user = getUser(event.id)
+
           }
+
         }
       }
 
