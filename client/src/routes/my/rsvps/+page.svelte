@@ -1,9 +1,9 @@
 <script lang="ts">
 import { onMount } from 'svelte';
-import { getMyRsvps } from '../../utils/getMyRsvps';
-import {API_HOST} from "../../utils/apiHost";
-import type {RsvpStatus} from "../../types/Rsvp";
-import type {Event} from "../../types/Event";
+import { getMyRsvps } from '../../../utils/getMyRsvps';
+import {API_HOST} from "../../../utils/apiHost";
+import type {RsvpStatus} from "../../../types/Rsvp";
+import type {Event} from "../../../types/Event";
 
 let hasRsvps = true;
 let loading = true;
