@@ -67,20 +67,30 @@
     <strong>only admins</strong> are allowed to create events, if you would like
     to use it for your own event, please contact your nearest admin for help!
   </p>
-  <a
-    href="/create-event"
-    class="dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover mt-6 inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
-    aria-label="Create Event"
-    role="button"
-  >
-    Create Event
-  </a>
-  <a
-    href="/events"
-    class="dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover mt-6 inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
-    aria-label="Create Event"
-    role="button"
-  >
-    View Events
-  </a>
+  <div class="flex flex-col items-center gap-4 mt-6">
+    <a
+      href="/create-event"
+      class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
+      aria-label="Create Event"
+      role="button"
+    >
+      Create Event
+    </a>
+    <a
+      href="/events"
+      class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
+      aria-label="View Events"
+      role="button"
+    >
+      View All Events
+    </a>
+    <a
+      href="/my/rsvps"
+      class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
+      aria-label="View My RSVPs"
+      role="button"
+    >
+      View My RSVPs
+    </a>
+  </div>
 </main>
