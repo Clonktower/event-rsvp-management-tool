@@ -42,7 +42,7 @@ onMount(async () => {
       <span class="text-lg text-gray-500">You Haven't RSVP'd to any events</span>
     {:else}
       <div class="w-full flex flex-col items-center gap-4">
-        {#each rsvps as { event, yourStatus }, i (event.id)}
+        {#each rsvps as { event, yourStatus }, i (event.id + i)}
           <a
             href={`/events/${event.id}`}
             class="w-full max-w-md bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-5 flex flex-col gap-2 transition hover:shadow-lg hover:ring-2 hover:ring-primary cursor-pointer focus:outline-none {i === rsvps.length - 1 ? 'mb-5' : ''}"

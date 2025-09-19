@@ -12,6 +12,7 @@
   import type {User} from "../../../types/User";
   import {addNewRsvp} from "../../../utils/addNewRsvp";
   import {adminFetch} from "../../../utils/adminFetch";
+  import { generateGoogleCalendarLink } from "../../../utils/generateGoogleCalendarLink";
 
   type RSVPRequestBody = {
     name: string;
@@ -117,7 +118,7 @@
       } else {
         deleteError = 'Failed to delete attendee.';
       }
-    } catch (_) {
+    } catch {
       deleteError = 'Error deleting attendee.';
     }
   }
@@ -137,7 +138,7 @@
       {#if event.max_attendees}
         <a
           class="flex items-center gap-2 rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-          href={`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${event.start_time.replace(/[-:]/g, "").replace(".000Z", "")}/${event.end_time ? event.end_time.replace(/[-:]/g, "").replace(".000Z", "") : ""}&location=${encodeURIComponent(event.location || "")}`}
+          href={generateGoogleCalendarLink(event)}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -183,8 +184,8 @@
       <RSVPForm
         bind:rsvp
         bind:attendeeName
-        onSubmit={ handleRsvpSubmit}
-        onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
+        onSubmit={handleRsvpSubmit}
+        onNameInput={e => attendeeName = (e.target as HTMLInputElement)?.value}
       />
     {:else if status !== undefined}
       <div class="mb-4 flex w-full items-center justify-center">
