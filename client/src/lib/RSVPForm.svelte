@@ -3,10 +3,8 @@
 
   export let rsvp: RsvpStatus;
   export let attendeeName: string;
-  export let guests: string;
   export let onSubmit: (e: Event) => void;
   export let onNameInput: (e: Event) => void;
-  export let onGuestsChange: (e: Event) => void;
 
   let rsvpOptions: { value: RsvpStatus; label: string }[] = [
     { value: "going", label: "Going" },
@@ -25,7 +23,7 @@
       id="attendeeName"
       name="attendeeName"
       type="text"
-      class="w-full rounded border border-gray-300 bg-white px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:bg-background-dark"
+      class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:bg-background-dark"
       placeholder="Enter your name"
       required
       aria-required="true"
@@ -55,22 +53,6 @@
     </div>
   </div>
 
-  {#if rsvp === "going"}
-    <div>
-      <label for="guests" class="mb-1 block font-semibold">Guests</label>
-      <select
-        id="guests"
-        name="guests"
-        class="w-full rounded border border-gray-300 bg-white px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:bg-background-dark"
-        bind:value={guests}
-        on:change={onGuestsChange}
-      >
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-      </select>
-    </div>
-  {/if}
   <button
     type="submit"
     class="self-start rounded bg-primary px-6 py-2 font-bold text-white shadow transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-gray-400"

@@ -4,6 +4,7 @@ import { getMyRsvps } from '../../../utils/getMyRsvps';
 import {API_HOST} from "../../../utils/apiHost";
 import type {RsvpStatus} from "../../../types/Rsvp";
 import type {Event} from "../../../types/Event";
+import {formatDate} from "../../../utils/format";
 
 let hasRsvps = true;
 let loading = true;
@@ -55,7 +56,7 @@ onMount(async () => {
               </span>
             </div>
             <div class="text-gray-600 dark:text-gray-300 text-sm">
-              <span class="font-medium">Date:</span> {event.date}<br />
+              <span class="font-medium">Date:</span> {formatDate(event.date)}<br />
               <span class="font-medium">Time:</span> {event.start_time} - {event.end_time}<br />
               <span class="font-medium">Location:</span> {event.location}
             </div>

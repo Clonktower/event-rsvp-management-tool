@@ -183,10 +183,8 @@
       <RSVPForm
         bind:rsvp
         bind:attendeeName
-        bind:guests
         onSubmit={ handleRsvpSubmit}
         onNameInput={(e) => attendeeName = (e.target as HTMLTextAreaElement)?.value}
-        onGuestsChange={(e) => guests = (e.target as HTMLTextAreaElement)?.value}
       />
     {:else if status !== undefined}
       <div class="mb-4 flex w-full items-center justify-center">
