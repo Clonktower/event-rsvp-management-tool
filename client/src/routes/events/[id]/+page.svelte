@@ -125,6 +125,13 @@
 
 </script>
 
+<svelte:head>
+  <title>{event.name} | Event RSVP</title>
+  <meta property="og:title" content={event.name} />
+  <meta property="og:description" content="Join us for {event.name}! RSVP now." />
+  <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
+</svelte:head>
+
 {#if !event}
   <div class="mt-10 text-center text-xl">No Such Event was found!</div>
 {:else}
