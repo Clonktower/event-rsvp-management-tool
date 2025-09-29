@@ -23,6 +23,7 @@
       id="attendeeName"
       name="attendeeName"
       type="text"
+      autocomplete="name"
       class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:bg-background-dark"
       placeholder="Enter your name"
       required

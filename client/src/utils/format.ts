@@ -1,10 +1,15 @@
 export function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  const weekday = d.toLocaleDateString(undefined, { weekday: "short" });
+  const timeZone = "Europe/Berlin";
+  const weekday = d.toLocaleDateString(undefined, {
+    weekday: "short",
+    timeZone,
+  });
   const date = d.toLocaleDateString(undefined, {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone,
   });
   return `${weekday}, ${date}`;
 }
