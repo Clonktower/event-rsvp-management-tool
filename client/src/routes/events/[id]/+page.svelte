@@ -39,7 +39,10 @@
   let user: User | undefined;
   let isAdmin = false;
 
+  let mounted = false;
+
   onMount(() => {
+    mounted = true;
     user = getUser(event.id)
     if (user?.id) {
       const found = attendees.find((a) => a.id === user?.id);
@@ -135,6 +138,7 @@
   <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
 </svelte:head>
 
+{#if mounted}
 {#if !event}
   <div class="mt-10 text-center text-xl">No Such Event was found!</div>
 {:else}
@@ -237,4 +241,5 @@
       <div class="w-full text-center bg-red-600 text-white py-2 rounded mb-2 mt-5">{deleteError}</div>
     {/if}
   </div>
+{/if}
 {/if}
