@@ -221,6 +221,20 @@
           </button>
         </div>
       </div>
+      <div class="flex w-full justify-center mb-4">
+        <button
+          class="w-64 rounded bg-blue-600 px-4 py-2 text-white font-semibold transition-colors hover:bg-blue-700"
+          on:click={() => {
+            user = undefined;
+            attendeeName = '';
+            rsvp = 'going';
+            guests = '0';
+            isFormVisible = true;
+          }}
+        >
+          RSVP for another person
+        </button>
+      </div>
     {/if}
 
     {#if showToast}
