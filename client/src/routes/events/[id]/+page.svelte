@@ -42,7 +42,6 @@
   let user: User | undefined;
   let users: User[] | undefined;
   let isAdmin = false;
-  let selectedUserId: string | undefined = undefined;
 
   onMount(() => {
     user = getUser(event.id)
@@ -63,22 +62,6 @@
     });
   });
 
-  $: if (users && users.length > 1 && selectedUserId) {
-    const foundUser = users.find(u => u.id === selectedUserId);
-    if (foundUser) {
-      user = foundUser;
-      const found = attendees.find((a) => a.id === user?.id);
-      if (found) {
-        attendeeName = found.name;
-        rsvp = found.status;
-        guests = found.guests ? String(found.guests) : "0";
-      } else {
-        attendeeName = user.name;
-        rsvp = "going";
-        guests = "0";
-      }
-    }
-  }
 
   async function handleRsvpSubmit() {
     try {
