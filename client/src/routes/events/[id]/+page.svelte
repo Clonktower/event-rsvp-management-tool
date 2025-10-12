@@ -146,7 +146,7 @@
   <div class="mt-10 text-center text-xl">No Such Event was found!</div>
 {:else}
   <div
-    class="mx-auto mt-8 max-w-xl rounded-lg bg-gray-50 p-6 shadow-lg dark:bg-gray-900"
+    class="mx-auto mt-8 mb-8 max-w-xl rounded-lg bg-gray-50 p-6 shadow-lg dark:bg-gray-900"
   >
     <h1
       class="mb-4 flex items-center justify-between gap-4 text-2xl font-bold text-primary"
@@ -251,6 +251,9 @@
           </button>
         </div>
       </div>
+        <div class="flex w-full justify-center mb-4">
+            <span class="text-gray-400 font-bold">----------OR----------</span>
+        </div>
       <div class="flex w-full justify-center mb-4">
         <button
           class="w-64 rounded bg-blue-600 px-4 py-2 text-white font-semibold transition-colors hover:bg-blue-700"
@@ -262,9 +265,10 @@
             isFormVisible = true;
           }}
         >
-          RSVP for another person
+            Add new RSVP
         </button>
       </div>
+
     {/if}
 
     {#if showToast}
