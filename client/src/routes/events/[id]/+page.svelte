@@ -13,6 +13,9 @@
   import {addNewRsvp} from "../../../utils/addNewRsvp";
   import {adminFetch} from "../../../utils/adminFetch";
   import { generateGoogleCalendarLink } from "../../../utils/generateGoogleCalendarLink";
+  import {getAllUsersForEvent} from "../../../utils/getAllUsersForEvent";
+  import {getUserDetailsByRsvpId} from "../../../utils/getUserDetailsByRsvpId";
+  import {getUserFromUsersById} from "../../../utils/getUserFromUsersById";
 
   type RSVPRequestBody = {
     name: string;
@@ -37,10 +40,13 @@
   let { hasResponded, status } = hasUserResponded(event.id, attendees)
   let isFormVisible = !hasResponded
   let user: User | undefined;
+  let users: User[] | undefined;
   let isAdmin = false;
 
   onMount(() => {
     user = getUser(event.id)
+    users = getAllUsersForEvent(event.id)
+
     if (user?.id) {
       const found = attendees.find((a) => a.id === user?.id);
       if (found) {
@@ -55,6 +61,7 @@
       isAdmin = false;
     });
   });
+
 
   async function handleRsvpSubmit() {
     try {
@@ -139,7 +146,7 @@
   <div class="mt-10 text-center text-xl">No Such Event was found!</div>
 {:else}
   <div
-    class="mx-auto mt-8 max-w-xl rounded-lg bg-gray-50 p-6 shadow-lg dark:bg-gray-900"
+    class="mx-auto mt-8 mb-8 max-w-xl rounded-lg bg-gray-50 p-6 shadow-lg dark:bg-gray-900"
   >
     <h1
       class="mb-4 flex items-center justify-between gap-4 text-2xl font-bold text-primary"
@@ -190,6 +197,29 @@
 
     <AttendeeList {attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
 
+    {#if users && users.length > 1}
+      <div class="mb-4">
+        <label for="user-select" class="block mb-1 font-semibold text-gray-700 dark:text-gray-200">Editing For</label>
+        <select
+          id="user-select"
+          on:change={(e) => {
+              if(!users) return;
+
+              // @ts-expect-error ignore for now
+              const value = e.target.value
+              user = getUserFromUsersById(value, users)
+              const userDetails = getUserDetailsByRsvpId(user?.id ?? '', attendees)
+              attendeeName = userDetails?.name ?? ''
+              rsvp = userDetails?.status || 'going'
+          }}
+          class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-background-dark text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+        >
+          {#each users as u (u.id)}
+            <option value={u.id}>{getUserDetailsByRsvpId(u.id, attendees)?.name}</option>
+          {/each}
+        </select>
+      </div>
+    {/if}
     {#if isFormVisible}
       <RSVPForm
         bind:rsvp
@@ -221,6 +251,24 @@
           </button>
         </div>
       </div>
+        <div class="flex w-full justify-center mb-4">
+            <span class="text-gray-400 font-bold">----------OR----------</span>
+        </div>
+      <div class="flex w-full justify-center mb-4">
+        <button
+          class="w-64 rounded bg-blue-600 px-4 py-2 text-white font-semibold transition-colors hover:bg-blue-700"
+          on:click={() => {
+            user = undefined;
+            attendeeName = '';
+            rsvp = 'going';
+            guests = '0';
+            isFormVisible = true;
+          }}
+        >
+            Add new RSVP
+        </button>
+      </div>
+
     {/if}
 
     {#if showToast}
