@@ -16,6 +16,7 @@
   import {getAllUsersForEvent} from "../../../utils/getAllUsersForEvent";
   import {getUserDetailsByRsvpId} from "../../../utils/getUserDetailsByRsvpId";
   import {getUserFromUsersById} from "../../../utils/getUserFromUsersById";
+  import MapLink from '$lib/MapLink.svelte';
 
   type RSVPRequestBody = {
     name: string;
@@ -190,7 +191,7 @@
     </div>
     <div class="mb-2">
       <span class="font-semibold">Location:</span>
-      {event.location}
+      <MapLink address={event.location} label={event.name} />
     </div>
     {#if event.max_attendees}
       <div class="mb-2">
