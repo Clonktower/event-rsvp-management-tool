@@ -12,7 +12,6 @@
   import type {User} from "../../../types/User";
   import {addNewRsvp} from "../../../utils/addNewRsvp";
   import {adminFetch} from "../../../utils/adminFetch";
-  import { generateGoogleCalendarLink } from "../../../utils/generateGoogleCalendarLink";
   import {getAllUsersForEvent} from "../../../utils/getAllUsersForEvent";
   import {getUserDetailsByRsvpId} from "../../../utils/getUserDetailsByRsvpId";
   import {getUserFromUsersById} from "../../../utils/getUserFromUsersById";
@@ -43,6 +42,7 @@
   let user: User | undefined;
   let users: User[] | undefined;
   let isAdmin = false;
+  let mounted = false;
 
   let mounted = false;
 
@@ -64,8 +64,11 @@
     }).catch(() => {
       isAdmin = false;
     });
-  });
 
+    // import the web component only in the browser
+    import('add-to-calendar-button');
+    mounted = true;
+  });
 
   async function handleRsvpSubmit() {
     try {
@@ -157,28 +160,22 @@
       class="mb-4 flex items-center justify-between gap-4 text-2xl font-bold text-primary"
     >
       <span>{event.name}</span>
-      {#if event.max_attendees}
-        <a
-          class="flex items-center gap-2 rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-          href={generateGoogleCalendarLink(event)}
-          target="_blank"
-          rel="noopener noreferrer"
+      {#if mounted}
+        <add-to-calendar-button
+          lightMode="system"
+          name={event.name}
+          startDate={event.date}
+          startTime={event.start_time}
+          endTime={event.end_time}
+          timeZone="Europe/Berlin"
+          location={event.location}
+          options="['Google', 'Apple', 'iCal', 'Microsoft365', 'MicrosoftTeams', 'Outlook.com', 'Yahoo']"
+          label="Add to Calendar"
+          hideBranding="True"
+          style="--btn-background: #2563eb; --btn-text: #fff; --btn-hover-background: #1d4ed8; --btn-font-weight: 600; --btn-border-radius: 0.5rem; --btn-padding: 0.5rem 1rem; --btn-font-size: 1rem; --btn-box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08); --btn-transition: background 0.2s; --btn-dark-background: #1e293b; --btn-dark-text: #fff; --btn-dark-hover-background: #334155; width: auto; min-width: 0; display: inline-block;"
+          size="2"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            ><path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M8 7V3M16 7V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            /></svg
-          >
-          Add to calendar
-        </a>
+        </add-to-calendar-button>
       {/if}
     </h1>
     <div class="mb-2">
