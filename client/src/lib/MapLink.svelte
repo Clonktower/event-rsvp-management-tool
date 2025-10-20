@@ -1,6 +1,6 @@
-<script>
-  export let address; // e.g. "1600 Amphitheatre Parkway, Mountain View, CA"
-  export let label = address;
+<script lang="ts">
+  export let address: string; // e.g. "1600 Amphitheatre Parkway, Mountain View, CA"
+  export let label: string = address;
 
   /**
    * Returns a platform-appropriate map link using an address string.
@@ -9,18 +9,18 @@
    * - Android: geo: URI (opens default map app, usually Google Maps)
    * - Fallback: Google Maps web URL
    */
-  function getMapLink(address, label) {
+  function getMapLink(address: string, label: string): string {
     const encodedAddress = encodeURIComponent(address);
     const encodedLabel = encodeURIComponent(label);
-    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const ua: string = navigator.userAgent || (navigator as any).vendor || (window as any).opera;
 
     // iOS / iPadOS
-    if (/iPad|iPhone/.test(ua) && !window.MSStream) {
+    if (/iPad|iPhone/.test(ua) && !(window as any).MSStream) {
       return `geo-navigation:///place?address=${encodedAddress}`;
     }
 
     // macOS
-    if (/Macintosh/.test(ua) && !window.MSStream) {
+    if (/Macintosh/.test(ua) && !(window as any).MSStream) {
       return `maps://?q=${encodedAddress}`;
     }
 
@@ -38,7 +38,7 @@
   href={getMapLink(address, label)}
   target="_blank"
   rel="noopener"
-  class="text-accentLight hover:underline"
+  class="text-accentLight underline underline-offset-4"
 >
   {address}
 </a>
