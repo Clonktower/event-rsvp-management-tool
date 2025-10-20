@@ -5,15 +5,29 @@ import {API_HOST} from "../../../utils/apiHost";
 import type {RsvpStatus} from "../../../types/Rsvp";
 import type {Event} from "../../../types/Event";
 import {formatDate} from "../../../utils/format";
+import { splitAndSortByEvent, type Group } from "../../../utils/sortAndGroupEvents";
 
-let hasRsvps = true;
+type Rsvp = {
+  event: Event;
+  yourStatus: RsvpStatus;
+  isLast?: boolean;
+};
+
 let loading = true;
-let rsvps: { event: Event, yourStatus: RsvpStatus }[] = [];
+let rsvps: Rsvp[] = [];
+let groups: Group<Rsvp>[] = [];
+
+function flagLastRsvp(groups: Group<Rsvp>[]) {
+  if (groups.length > 0) {
+    const lastGroup = groups[groups.length - 1];
+    const lastItem = lastGroup.items[lastGroup.items.length - 1];
+    lastItem.isLast = true;
+  }
+}
 
 onMount(async () => {
   const myRsvps = getMyRsvps();
-  if (myRsvps.length === 0) {
-    hasRsvps = false;
+  if (!myRsvps.length) {
     loading = false;
     return;
   }
@@ -21,10 +35,11 @@ onMount(async () => {
     const res = await fetch(`${API_HOST}/rsvps/my`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({myRsvps})
+      body: JSON.stringify({ myRsvps })
     });
-    const data = await res.json();
-    rsvps = data.rsvps || [];
+    rsvps = (await res.json()).rsvps || [];
+    groups = splitAndSortByEvent(rsvps);
+    flagLastRsvp(groups);
   } catch (err) {
     console.error('Failed to fetch RSVPs from backend:', err);
   } finally {
@@ -36,16 +51,17 @@ onMount(async () => {
 <div class="flex flex-col items-center justify-center mt-16 w-full px-2">
   {#if loading}
     <span>Loading...</span>
-  {:else if hasRsvps}
+  {:else if !groups.length}
+    <span class="text-lg text-gray-500">You haven't RSVP'd to any events</span>
+  {:else}
     <h1 class="text-2xl font-bold mb-6">Events you have responded to</h1>
-    {#if rsvps.length === 0}
-      <span class="text-lg text-gray-500">You Haven't RSVP'd to any events</span>
-    {:else}
-      <div class="w-full flex flex-col items-center gap-4">
-        {#each rsvps as { event, yourStatus }, i (event.id + i)}
+    <div class="w-full flex flex-col items-center gap-4">
+      {#each groups as { title, items }}
+        <h2 class="text-xl font-semibold mt-4">{title}</h2>
+        {#each items as { event, yourStatus, isLast } (event.id)}
           <a
             href={`/events/${event.id}`}
-            class="w-full max-w-md bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-5 flex flex-col gap-2 transition hover:shadow-lg hover:ring-2 hover:ring-primary cursor-pointer focus:outline-none {i === rsvps.length - 1 ? 'mb-5' : ''}"
+            class="w-full max-w-md bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-5 flex flex-col gap-2 transition hover:shadow-lg hover:ring-2 hover:ring-primary cursor-pointer focus:outline-none {isLast ? 'mb-5' : ''}"
             tabindex="0"
             role="link"
           >
@@ -62,9 +78,7 @@ onMount(async () => {
             </div>
           </a>
         {/each}
-      </div>
-    {/if}
-  {:else}
-    <span class="text-lg text-gray-500">You Haven't RSVP'd to any events</span>
+      {/each}
+    </div>
   {/if}
 </div>
