@@ -44,8 +44,6 @@
   let isAdmin = false;
   let mounted = false;
 
-  let mounted = false;
-
   onMount(() => {
     mounted = true;
     user = getUser(event.id)
