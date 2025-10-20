@@ -44,8 +44,42 @@
   let isAdmin = false;
   let mounted = false;
 
-  onMount(() => {
+  async function removeStaleLocalStorageEntries(eventId: string) {
+    const users = getAllUsersForEvent(eventId);
+    if (!users || users.length === 0) return;
+
+    const res = await fetch(`${API_HOST}/events/${event.id}`);
+    if (!res.ok) {
+      console.error('Failed to sync RSVPs');
+      return;
+    }
+    const fetchData = await res.json();
+    const rsvps = fetchData.rsvp;
+    const validIds = rsvps.map((r: { id: any; }) => r.id);
+
+    // Remove stale localStorage entries
+    const myEvents = JSON.parse(localStorage.getItem('my_events') || '{}');
+    if (!myEvents[eventId]) return;
+
+    Object.keys(myEvents[eventId]).forEach(id => {
+      if (!validIds.includes(id)) {
+        delete myEvents[eventId][id];
+      }
+    });
+
+    // Clean up empty event keys
+    if (Object.keys(myEvents[eventId]).length === 0) {
+      delete myEvents[eventId];
+    }
+
+    localStorage.setItem('my_events', JSON.stringify(myEvents));
+  }
+
+  onMount(async () => {
     mounted = true;
+
+    await removeStaleLocalStorageEntries(event.id);
+
     user = getUser(event.id)
     users = getAllUsersForEvent(event.id)
 
