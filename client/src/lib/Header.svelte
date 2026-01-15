@@ -1,8 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { getContext } from 'svelte';
+
   let sidebarOpen = false;
-  function openSidebar() { sidebarOpen = true; }
-  function closeSidebar() { sidebarOpen = false; }
+  const setMenuOpen = getContext<(isOpen: boolean) => void>('setMenuOpen');
+  function openSidebar() {
+    setMenuOpen(true);
+    sidebarOpen = true;
+  }
+  function closeSidebar() {
+    setMenuOpen(false);
+    sidebarOpen = false;
+  }
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') closeSidebar();
   }
@@ -12,7 +21,10 @@
   });
 </script>
 
-<header class="w-full bg-background-dark/90 py-2 text-text-light shadow-sm backdrop-blur-md transition-colors dark:bg-gray-900">
+<header
+  class="w-full bg-background-dark/90 py-2 text-text-light shadow-sm backdrop-blur-md transition-colors dark:bg-gray-900"
+  inert="{sidebarOpen}"
+>
   <nav class="mx-auto flex max-w-3xl items-center justify-between px-4 relative h-14">
     <div class="w-10 flex-shrink-0"></div>
     <a
