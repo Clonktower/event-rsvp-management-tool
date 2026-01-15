@@ -53,7 +53,6 @@
         bind:value={username}
         required
         aria-required="true"
-        aria-label="Event Name"
         class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
       />
     </div>
@@ -69,7 +68,6 @@
         bind:value={password}
         required
         aria-required="true"
-        aria-label="Password"
         class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
       />
     </div>
@@ -82,7 +80,6 @@
     <button
       type="submit"
       class="dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover mt-4 flex min-w-[140px] items-center justify-center rounded bg-primary px-6 py-2 font-bold text-white shadow transition-colors hover:bg-primary-dark"
-      aria-label="Create Event"
       disabled={loading}
     >
       {#if loading}

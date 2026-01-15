@@ -63,7 +63,7 @@
     id="page-title"
   >
     <span class="inline-block min-w-[120px]">{displayText}</span>
-    <span role="img" aria-label="waving hand">👋</span>
+    <span role="presentation">👋</span>
   </h1>
   <p class="mt-10 max-w-xl text-center text-gray-600 dark:text-gray-300">
     A simple app to organise and manage our BOTC and other private events.<br
@@ -75,24 +75,18 @@
     <a
       href="/create-event"
       class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
-      aria-label="Create Event"
-      role="button"
     >
       Create Event
     </a>
     <a
       href="/events"
       class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
-      aria-label="View Events"
-      role="button"
     >
       View All Events
     </a>
     <a
       href="/my/rsvps"
       class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
-      aria-label="View My RSVPs"
-      role="button"
     >
       View My RSVPs
     </a>
