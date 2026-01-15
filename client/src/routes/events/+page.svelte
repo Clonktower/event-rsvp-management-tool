@@ -83,12 +83,10 @@
             <div
               class="relative mx-auto mt-8 w-full max-w-xs rounded-lg bg-gray-50 p-6 shadow-lg dark:bg-gray-900"
               on:click={() => openEvent(event.id)}
-              tabindex="0"
-              role="button"
-              aria-label={`View event ${event.name}`}
+              role="presentation"
             >
               <div class="mb-1 flex items-center justify-between">
-                <div class="text-xl font-bold">{event.name}</div>
+                <a class="text-xl font-bold" href={`/events/${event.id}`}>{event.name}</a>
                 <button
                   class="z-10 ml-2 rounded-full bg-white p-1 text-red-500 shadow hover:text-red-700 dark:bg-gray-800"
                   on:click|stopPropagation={() => deleteEvent(event.id)}
