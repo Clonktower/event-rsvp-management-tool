@@ -49,6 +49,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Welcome | Event RSVP</title>
+</svelte:head>
+
 <main
   id="main-content"
   class="mt-8 flex min-h-screen flex-col items-center bg-background transition-colors dark:bg-background-dark"

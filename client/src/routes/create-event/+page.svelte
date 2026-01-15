@@ -75,6 +75,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Create Event | Event RSVP</title>
+</svelte:head>
+
 {#if authLoading}
   <div class="mt-12 flex min-h-[60vh] flex-col items-center justify-center">
     <div class="mb-4 text-center text-lg font-semibold text-gray-500">

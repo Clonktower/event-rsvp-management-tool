@@ -48,6 +48,10 @@ onMount(async () => {
 });
 </script>
 
+<svelte:head>
+  <title>My RSVPs | Event RSVP</title>
+</svelte:head>
+
 <div class="flex flex-col items-center justify-center mt-16 w-full px-2">
   {#if loading}
     <span>Loading...</span>
