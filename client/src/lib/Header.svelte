@@ -33,7 +33,7 @@
   class="w-full bg-background-dark/90 py-2 text-text-light shadow-sm backdrop-blur-md transition-colors dark:bg-gray-900"
   inert="{sidebarOpen}"
 >
-  <nav class="mx-auto flex max-w-3xl items-center justify-between px-4 relative h-14">
+  <nav class="mx-auto flex max-w-3xl items-center justify-between px-4 relative h-14" aria-label="Main navigation">
     <div class="w-10 flex-shrink-0"></div>
     <a
       href="/"
@@ -96,7 +96,7 @@
         </svg>
       </button>
     </div>
-    <nav class="flex flex-col gap-2 p-4">
+    <nav class="flex flex-col gap-2 p-4" aria-label="Sidebar navigation">
       <a
         href="/"
         class="rounded px-3 py-2 text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
