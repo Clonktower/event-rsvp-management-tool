@@ -2,16 +2,24 @@
   import { onMount } from 'svelte';
   import { getContext } from 'svelte';
 
-  let sidebarOpen = false;
+  let sidebarOpen = $state(false);
   const setMenuOpen = getContext<(isOpen: boolean) => void>('setMenuOpen');
-  function openSidebar() {
-    setMenuOpen(true);
-    sidebarOpen = true;
-  }
-  function closeSidebar() {
-    setMenuOpen(false);
-    sidebarOpen = false;
-  }
+  let closeButton: HTMLButtonElement;
+  let returnFocusTo: HTMLElement;
+
+  function openSidebar() { sidebarOpen = true; }
+  function closeSidebar() { sidebarOpen = false; }
+
+  $effect(() => {
+    if (sidebarOpen) {
+      returnFocusTo = document.activeElement as HTMLElement;
+      closeButton?.focus();
+    } else {
+      returnFocusTo?.focus();
+    }
+    setMenuOpen(sidebarOpen);
+  });
+
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') closeSidebar();
   }
@@ -59,6 +67,7 @@
   <div
     class="fixed inset-0 z-40 bg-black/40"
     on:click={closeSidebar}
+    aria-hidden="true"
   ></div>
   <aside
     class="fixed right-0 top-0 z-50 h-full w-72 max-w-full bg-white dark:bg-gray-900 shadow-lg transition-transform duration-200 transform translate-x-0 flex flex-col"
@@ -69,6 +78,7 @@
         class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800"
         aria-label="Close menu"
         on:click={closeSidebar}
+        bind:this={closeButton}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
