@@ -66,7 +66,6 @@ onMount(async () => {
           <a
             href={`/events/${event.id}`}
             class="w-full max-w-md bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-5 flex flex-col gap-2 transition hover:shadow-lg hover:ring-2 hover:ring-primary cursor-pointer {isLast ? 'mb-5' : ''}"
-            tabindex="0"
           >
             <div class="flex items-center justify-between">
               <span class="text-xl font-semibold text-primary">{event.name}</span>

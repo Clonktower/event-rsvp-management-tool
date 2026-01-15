@@ -56,7 +56,6 @@
 <main
   id="main-content"
   class="mt-8 flex min-h-screen flex-col items-center bg-background transition-colors dark:bg-background-dark"
-  tabindex="-1"
 >
   <h1
     class="drop-shadow-funky text-center font-inter text-3xl font-extrabold"

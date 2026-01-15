@@ -245,7 +245,6 @@
             title="Edit RSVP"
             on:click={() => isFormVisible = true}
             on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { isFormVisible = true; } }}
-            tabindex="0"
           >
             Edit
           </button>
