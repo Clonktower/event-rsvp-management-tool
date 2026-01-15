@@ -39,7 +39,7 @@
       {#each rsvpOptions as opt (opt.value)}
         <button
           type="button"
-          class="px-4 py-2 focus:outline-none focus:z-10 text-sm font-semibold transition-colors
+          class="px-4 py-2 focus:underline focus:z-10 text-sm font-semibold transition-colors
             {rsvp === opt.value && opt.value === 'going' ? 'bg-green-800 text-white' : ''}
             {rsvp === opt.value && opt.value === 'maybe' ? 'bg-yellow-800 text-white' : ''}
             {rsvp === opt.value && opt.value === 'not_going' ? 'bg-red-800 text-white' : ''}

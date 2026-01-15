@@ -90,7 +90,7 @@
               <div class="mb-1 flex items-center justify-between">
                 <div class="text-xl font-bold">{event.name}</div>
                 <button
-                  class="z-10 ml-2 rounded-full bg-white p-1 text-red-500 shadow hover:text-red-700 focus:outline-none dark:bg-gray-800"
+                  class="z-10 ml-2 rounded-full bg-white p-1 text-red-500 shadow hover:text-red-700 dark:bg-gray-800"
                   on:click|stopPropagation={() => deleteEvent(event.id)}
                   aria-label="Delete event"
                 >
