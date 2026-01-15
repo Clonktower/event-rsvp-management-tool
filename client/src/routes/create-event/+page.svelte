@@ -98,7 +98,7 @@
     </div>
   </div>
 {:else}
-  <main class="flex min-h-screen flex-col items-center py-8">
+  <div class="flex min-h-screen flex-col items-center py-8">
     <form
       class="flex w-full max-w-md flex-col gap-3 rounded-xl bg-surface p-6 font-inter shadow dark:bg-gray-900"
       on:submit|preventDefault={handleSubmit}
@@ -223,5 +223,5 @@
         </a>
       </div>
     {/if}
-  </main>
+  </div>
 {/if}

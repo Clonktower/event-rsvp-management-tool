@@ -53,7 +53,7 @@
   <title>Welcome | Event RSVP</title>
 </svelte:head>
 
-<main
+<div
   id="main-content"
   class="mt-8 flex min-h-screen flex-col items-center bg-background transition-colors dark:bg-background-dark"
 >
@@ -90,4 +90,4 @@
       View My RSVPs
     </a>
   </div>
-</main>
+</div>

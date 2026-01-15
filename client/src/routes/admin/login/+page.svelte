@@ -30,7 +30,7 @@
   <title>Admin Login | Event RSVP</title>
 </svelte:head>
 
-<main class="flex min-h-screen flex-col items-center py-8">
+<div class="flex min-h-screen flex-col items-center py-8">
   <h1
     class="dark:text-primary-darkmode mb-8 font-inter text-2xl font-bold text-primary"
   >
@@ -96,4 +96,4 @@
       {/if}
     </button>
   </form>
-</main>
+</div>

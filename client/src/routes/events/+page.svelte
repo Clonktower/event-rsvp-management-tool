@@ -54,7 +54,7 @@
   <title>All Events | Event RSVP</title>
 </svelte:head>
 
-<main class="flex min-h-[60vh] flex-col items-center px-2 py-8">
+<div class="flex min-h-[60vh] flex-col items-center px-2 py-8">
   <h1 class="mb-8 text-center text-2xl font-bold">All Events</h1>
   <div class="flex w-full max-w-4xl flex-col items-center">
     {#if loading}
@@ -121,4 +121,4 @@
       </div>
     {/if}
   </div>
-</main>
+</div>
