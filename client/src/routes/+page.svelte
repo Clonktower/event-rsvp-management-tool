@@ -57,12 +57,14 @@
   id="main-content"
   class="mt-8 flex min-h-screen flex-col items-center bg-background transition-colors dark:bg-background-dark"
 >
+  <h1 class="sr-only">{greetings[0].text}</h1>
   <h1
     class="drop-shadow-funky text-center font-inter text-3xl font-extrabold"
     id="page-title"
+    role="presentation"
   >
     <span class="inline-block min-w-[120px]">{displayText}</span>
-    <span role="presentation">👋</span>
+    <span>👋</span>
   </h1>
   <p class="mt-10 max-w-xl text-center text-gray-600 dark:text-gray-300">
     A simple app to organise and manage our BOTC and other private events.<br
