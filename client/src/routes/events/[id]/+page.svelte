@@ -195,7 +195,7 @@
       </div>
     {/if}
 
-    <AttendeeList {attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
+    <AttendeeList {attendees} maxAttendees={event.max_attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
 
     {#if users && users.length > 1}
       <div class="mb-4">
