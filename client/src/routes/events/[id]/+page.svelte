@@ -16,6 +16,7 @@
   import {getUserDetailsByRsvpId} from "../../../utils/getUserDetailsByRsvpId";
   import {getUserFromUsersById} from "../../../utils/getUserFromUsersById";
   import MapLink from '$lib/MapLink.svelte';
+  import { isUserOnWaitlist } from '../../../utils/isUserOnWaitlist';
 
   type RSVPRequestBody = {
     name: string;
@@ -155,9 +156,10 @@
     class="mx-auto mt-8 mb-8 max-w-xl rounded-lg bg-gray-50 p-6 shadow-lg dark:bg-gray-900"
   >
     <h1
-      class="mb-4 flex items-center justify-between gap-4 text-2xl font-bold text-primary"
+      class="mb-4 flex flex-wrap justify-between gap-4 text-2xl font-bold text-primary"
+      style="min-width: 0;"
     >
-      <span>{event.name}</span>
+      <span class="break-words min-w-0 flex-1">{event.name}</span>
       {#if mounted}
         <add-to-calendar-button
           lightMode="system"
@@ -228,28 +230,46 @@
         onNameInput={e => attendeeName = (e.target as HTMLInputElement)?.value}
       />
     {:else if status !== undefined}
-      <div class="mb-4 flex w-full items-center justify-center">
-        <div class="relative w-full rounded px-4 py-2  font-semibold flex items-center bg-blue-100 dark:bg-blue-300 text-blue-900 dark:text-blue-800">
-          <span>
-            You are marked as
-            <span class="px-1 py-1 rounded font-bold"
-              class:text-green-700={rsvp === 'going'}
-              class:text-red-800={rsvp === 'not_going'}
-              class:text-yellow-800={rsvp === 'maybe'}
-            >
-              {rsvp === 'going' ? 'Going' : rsvp === 'maybe' ? 'Maybe' : 'Not Going'}
+      {#if rsvp === 'going' && isUserOnWaitlist(attendees, user?.id ?? '', event.max_attendees)}
+        <div class="mb-4 flex w-full items-center justify-center">
+          <div class="relative w-full rounded px-4 py-2 font-semibold flex items-center bg-blue-100 dark:bg-blue-300 text-blue-900 dark:text-blue-800">
+            <span>
+              You are currently on the <span class="font-bold text-orange-900 dark:text-orange-900">Waitlist</span>.
             </span>
-          </span>
-          <button type="button"
-            class="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer underline text-blue-700 dark:text-blue-900"
-            title="Edit RSVP"
-            on:click={() => isFormVisible = true}
-            on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { isFormVisible = true; } }}
-          >
-            Edit
-          </button>
+            <button type="button"
+              class="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer underline text-blue-700 dark:text-blue-900"
+              title="Edit RSVP"
+              on:click={() => isFormVisible = true}
+              on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { isFormVisible = true; } }}
+            >
+              Edit
+            </button>
+          </div>
         </div>
-      </div>
+      {:else}
+        <div class="mb-4 flex w-full items-center justify-center">
+          <div class="relative w-full rounded px-4 py-2  font-semibold flex items-center bg-blue-100 dark:bg-blue-300 text-blue-900 dark:text-blue-800">
+            <span>
+              You are marked as
+              <span class="px-1 py-1 rounded font-bold"
+                class:text-green-700={rsvp === 'going'}
+                class:text-red-800={rsvp === 'not_going'}
+                class:text-yellow-800={rsvp === 'maybe'}
+              >
+                {rsvp === 'going' ? 'Going' : rsvp === 'maybe' ? 'Maybe' : 'Not Going'}
+              </span>
+            </span>
+            <button type="button"
+              class="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer underline text-blue-700 dark:text-blue-900"
+              title="Edit RSVP"
+              on:click={() => isFormVisible = true}
+              on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { isFormVisible = true; } }}
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+      {/if}
         <div class="flex w-full justify-center mb-4">
             <span class="text-gray-400 font-bold">----------OR----------</span>
         </div>
