@@ -156,9 +156,10 @@
     class="mx-auto mt-8 mb-8 max-w-xl rounded-lg bg-gray-50 p-6 shadow-lg dark:bg-gray-900"
   >
     <h1
-      class="mb-4 flex items-center justify-between gap-4 text-2xl font-bold text-primary"
+      class="mb-4 flex flex-wrap justify-between gap-4 text-2xl font-bold text-primary"
+      style="min-width: 0;"
     >
-      <span>{event.name}</span>
+      <span class="break-words min-w-0 flex-1">{event.name}</span>
       {#if mounted}
         <add-to-calendar-button
           lightMode="system"
