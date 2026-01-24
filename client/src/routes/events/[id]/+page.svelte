@@ -284,7 +284,7 @@
             isFormVisible = true;
           }}
         >
-            Add new RSVP
+            Bringing a +1? Click here
         </button>
       </div>
 
