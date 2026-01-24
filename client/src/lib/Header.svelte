@@ -1,8 +1,25 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  let sidebarOpen = false;
+  import { getContext } from 'svelte';
+
+  let sidebarOpen = $state(false);
+  const setMenuOpen = getContext<(isOpen: boolean) => void>('setMenuOpen');
+  let closeButton: HTMLButtonElement;
+  let returnFocusTo: HTMLElement;
+
   function openSidebar() { sidebarOpen = true; }
   function closeSidebar() { sidebarOpen = false; }
+
+  $effect(() => {
+    if (sidebarOpen) {
+      returnFocusTo = document.activeElement as HTMLElement;
+      closeButton?.focus();
+    } else {
+      returnFocusTo?.focus();
+    }
+    setMenuOpen(sidebarOpen);
+  });
+
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') closeSidebar();
   }
@@ -12,8 +29,11 @@
   });
 </script>
 
-<header class="w-full bg-background-dark/90 py-2 text-text-light shadow-sm backdrop-blur-md transition-colors dark:bg-gray-900">
-  <nav class="mx-auto flex max-w-3xl items-center justify-between px-4 relative h-14">
+<header
+  class="w-full bg-background-dark/90 py-2 text-text-light shadow-sm backdrop-blur-md transition-colors dark:bg-gray-900"
+  inert="{sidebarOpen}"
+>
+  <nav class="mx-auto flex max-w-3xl items-center justify-between px-4 relative h-14" aria-label="Main navigation">
     <div class="w-10 flex-shrink-0"></div>
     <a
       href="/"
@@ -47,6 +67,7 @@
   <div
     class="fixed inset-0 z-40 bg-black/40"
     on:click={closeSidebar}
+    aria-hidden="true"
   ></div>
   <aside
     class="fixed right-0 top-0 z-50 h-full w-72 max-w-full bg-white dark:bg-gray-900 shadow-lg transition-transform duration-200 transform translate-x-0 flex flex-col"
@@ -57,6 +78,7 @@
         class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800"
         aria-label="Close menu"
         on:click={closeSidebar}
+        bind:this={closeButton}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -74,7 +96,7 @@
         </svg>
       </button>
     </div>
-    <nav class="flex flex-col gap-2 p-4">
+    <nav class="flex flex-col gap-2 p-4" aria-label="Sidebar navigation">
       <a
         href="/"
         class="rounded px-3 py-2 text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800"

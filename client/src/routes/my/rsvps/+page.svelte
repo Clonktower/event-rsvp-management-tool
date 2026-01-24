@@ -48,6 +48,10 @@ onMount(async () => {
 });
 </script>
 
+<svelte:head>
+  <title>My RSVPs | Event RSVP</title>
+</svelte:head>
+
 <div class="flex flex-col items-center justify-center mt-16 w-full px-2">
   {#if loading}
     <span>Loading...</span>
@@ -61,9 +65,7 @@ onMount(async () => {
         {#each items as { event, yourStatus, isLast } (event.id)}
           <a
             href={`/events/${event.id}`}
-            class="w-full max-w-md bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-5 flex flex-col gap-2 transition hover:shadow-lg hover:ring-2 hover:ring-primary cursor-pointer focus:outline-none {isLast ? 'mb-5' : ''}"
-            tabindex="0"
-            role="link"
+            class="w-full max-w-md bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-5 flex flex-col gap-2 transition hover:shadow-lg hover:ring-2 hover:ring-primary cursor-pointer {isLast ? 'mb-5' : ''}"
           >
             <div class="flex items-center justify-between">
               <span class="text-xl font-semibold text-primary">{event.name}</span>

@@ -49,17 +49,22 @@
   });
 </script>
 
-<main
+<svelte:head>
+  <title>Welcome | Event RSVP</title>
+</svelte:head>
+
+<div
   id="main-content"
   class="mt-8 flex min-h-screen flex-col items-center bg-background transition-colors dark:bg-background-dark"
-  tabindex="-1"
 >
+  <h1 class="sr-only">{greetings[0].text}</h1>
   <h1
     class="drop-shadow-funky text-center font-inter text-3xl font-extrabold"
     id="page-title"
+    role="presentation"
   >
     <span class="inline-block min-w-[120px]">{displayText}</span>
-    <span role="img" aria-label="waving hand">👋</span>
+    <span>👋</span>
   </h1>
   <p class="mt-10 max-w-xl text-center text-gray-600 dark:text-gray-300">
     A simple app to organise and manage our BOTC and other private events.<br
@@ -71,26 +76,20 @@
     <a
       href="/create-event"
       class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
-      aria-label="Create Event"
-      role="button"
     >
       Create Event
     </a>
     <a
       href="/events"
       class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
-      aria-label="View Events"
-      role="button"
     >
       View All Events
     </a>
     <a
       href="/my/rsvps"
       class="w-64 dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover inline-block rounded bg-primary px-8 py-3 text-center font-inter text-lg font-bold text-white shadow-lg transition-colors hover:bg-primary-dark"
-      aria-label="View My RSVPs"
-      role="button"
     >
       View My RSVPs
     </a>
   </div>
-</main>
+</div>

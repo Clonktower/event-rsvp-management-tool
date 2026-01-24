@@ -50,7 +50,11 @@
   }
 </script>
 
-<main class="flex min-h-[60vh] flex-col items-center px-2 py-8">
+<svelte:head>
+  <title>All Events | Event RSVP</title>
+</svelte:head>
+
+<div class="flex min-h-[60vh] flex-col items-center px-2 py-8">
   <h1 class="mb-8 text-center text-2xl font-bold">All Events</h1>
   <div class="flex w-full max-w-4xl flex-col items-center">
     {#if loading}
@@ -79,14 +83,12 @@
             <div
               class="relative mx-auto mt-8 w-full max-w-xs rounded-lg bg-gray-50 p-6 shadow-lg dark:bg-gray-900"
               on:click={() => openEvent(event.id)}
-              tabindex="0"
-              role="button"
-              aria-label={`View event ${event.name}`}
+              role="presentation"
             >
               <div class="mb-1 flex items-center justify-between">
-                <div class="text-xl font-bold">{event.name}</div>
+                <a class="text-xl font-bold" href={`/events/${event.id}`}>{event.name}</a>
                 <button
-                  class="z-10 ml-2 rounded-full bg-white p-1 text-red-500 shadow hover:text-red-700 focus:outline-none dark:bg-gray-800"
+                  class="z-10 ml-2 rounded-full bg-white p-1 text-red-500 shadow hover:text-red-700 dark:bg-gray-800"
                   on:click|stopPropagation={() => deleteEvent(event.id)}
                   aria-label="Delete event"
                 >
@@ -119,4 +121,4 @@
       </div>
     {/if}
   </div>
-</main>
+</div>

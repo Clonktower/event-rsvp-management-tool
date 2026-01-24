@@ -64,7 +64,7 @@
   <div class="mb-6">
     <button
       type="button"
-      class="flex items-center gap-2 font-semibold text-primary focus:outline-none"
+      class="flex items-center gap-2 font-semibold text-primary"
       on:click={() => (attendeesOpen = !attendeesOpen)}
       aria-expanded={attendeesOpen}
       aria-controls="attendees-list"
@@ -148,7 +148,7 @@
                   {#if showDeleteButton}
                     <button
                       type="button"
-                      class="ml-2 p-1 text-gray-400 hover:text-red-600 focus:outline-none"
+                      class="ml-2 p-1 text-gray-400 hover:text-red-600 focus:text-red-600"
                       aria-label="Delete attendee"
                       on:click={() => onDelete(a.id)}
                     >

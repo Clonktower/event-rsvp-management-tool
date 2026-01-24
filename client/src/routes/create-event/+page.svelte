@@ -75,6 +75,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Create Event | Event RSVP</title>
+</svelte:head>
+
 {#if authLoading}
   <div class="mt-12 flex min-h-[60vh] flex-col items-center justify-center">
     <div class="mb-4 text-center text-lg font-semibold text-gray-500">
@@ -94,7 +98,7 @@
     </div>
   </div>
 {:else}
-  <main class="flex min-h-screen flex-col items-center py-8">
+  <div class="flex min-h-screen flex-col items-center py-8">
     <form
       class="flex w-full max-w-md flex-col gap-3 rounded-xl bg-surface p-6 font-inter shadow dark:bg-gray-900"
       on:submit|preventDefault={handleSubmit}
@@ -117,7 +121,6 @@
           bind:value={name}
           required
           aria-required="true"
-          aria-label="Event Name"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
@@ -133,7 +136,6 @@
           bind:value={date}
           required
           aria-required="true"
-          aria-label="Event Date"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
@@ -146,7 +148,6 @@
           name="startTime"
           type="time"
           bind:value={startTime}
-          aria-label="Starting Time"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
@@ -158,7 +159,6 @@
           name="endTime"
           type="time"
           bind:value={endTime}
-          aria-label="Ending Time"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
@@ -174,8 +174,7 @@
           type="number"
           min="1"
           bind:value={maxAttendees}
-          required="true"
-          aria-label="Max Attendees"
+          required
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
@@ -191,14 +190,12 @@
           bind:value={location}
           required
           aria-required="true"
-          aria-label="Location"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
       <button
         type="submit"
         class="dark:bg-primary-darkmode dark:hover:bg-primary-darkmode-hover mt-4 flex min-w-[140px] items-center justify-center rounded bg-primary px-6 py-2 font-bold text-white shadow transition-colors hover:bg-primary-dark"
-        aria-label="Create Event"
         disabled={loading}
       >
         {#if loading}
@@ -226,5 +223,5 @@
         </a>
       </div>
     {/if}
-  </main>
+  </div>
 {/if}
