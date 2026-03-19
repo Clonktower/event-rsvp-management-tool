@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { createEvent as createEventService, getEventById as getEventByIdService, getAllEvents as getAllEventsService, deleteEvent as deleteEventService } from "../services/event";
 import { getRsvpByEventId } from '../services/rsvp';
+import { getPollByEventId } from '../services/poll';
 
 export const createEvent = async (req: Request, res: Response, next: Function) => {
   const { name, date, startTime, endTime, maxAttendees, location } = req.body;
@@ -28,7 +29,8 @@ export const getEventById = async (req: Request, res: Response, next: Function) 
     }
     // Fetch attendees for this event using the service
     const attendees = await getRsvpByEventId(id);
-    res.status(200).json({ event, rsvp: attendees });
+    const poll = getPollByEventId(id);
+    res.status(200).json({ event, rsvp: attendees, poll });
   } catch (err) {
     next(err);
   }

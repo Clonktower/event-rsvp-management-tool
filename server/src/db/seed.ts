@@ -46,6 +46,43 @@ export default function seed() {
 
     migrationAddTokenColumnToRsvp();
 
+    // Create polls table
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS polls (
+        id TEXT PRIMARY KEY,
+        event_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at DATETIME NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
+      );
+    `).run();
+
+    // Create poll_options table
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS poll_options (
+        id TEXT PRIMARY KEY,
+        poll_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
+        description TEXT,
+        created_at DATETIME NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY(poll_id) REFERENCES polls(id) ON DELETE CASCADE
+      );
+    `).run();
+
+    // Create poll_votes table
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS poll_votes (
+        poll_option_id TEXT NOT NULL,
+        rsvp_id TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY(poll_option_id, rsvp_id),
+        FOREIGN KEY(poll_option_id) REFERENCES poll_options(id) ON DELETE CASCADE,
+        FOREIGN KEY(rsvp_id) REFERENCES rsvp(id) ON DELETE CASCADE
+      );
+    `).run();
+
     console.log('Tables created successfully!');
   } catch (err) {
     console.error('Error creating tables:', err);
