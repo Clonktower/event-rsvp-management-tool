@@ -171,7 +171,7 @@
           name={event.name}
           startDate={event.date}
           startTime={event.start_time}
-          endTime={event.end_time ?? (event.start_time ? addOneHour(event.start_time) : undefined)}
+          endTime={event.end_time ?? addOneHour(event.start_time)}
           timeZone="Europe/Berlin"
           location={event.location}
           options="['Google', 'Apple', 'iCal', 'Microsoft365', 'MicrosoftTeams', 'Outlook.com', 'Yahoo']"
