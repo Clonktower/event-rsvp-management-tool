@@ -17,6 +17,8 @@
   import {getUserFromUsersById} from "../../../utils/getUserFromUsersById";
   import MapLink from '$lib/MapLink.svelte';
   import { isUserOnWaitlist } from '../../../utils/isUserOnWaitlist';
+  import PollWidget from '$lib/PollWidget.svelte';
+  import type { Poll } from '../../../types/Poll';
 
   function addOneHour(time: string): string {
     const [h, m] = time.split(':').map(Number);
@@ -31,8 +33,9 @@
     token?: string
   };
 
-  export let data: { event: Event; rsvp: Rsvp[] };
+  export let data: { event: Event; rsvp: Rsvp[]; poll: Poll | null };
   const event = data.event;
+  let poll: Poll | null = data.poll;
 
   let attendees = data.rsvp;
   $: goingCount = getTotalAttendance(attendees);
@@ -203,6 +206,8 @@
     {/if}
 
     <AttendeeList {attendees} maxAttendees={event.max_attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
+
+    <PollWidget {poll} {user} {isAdmin} eventId={event.id} />
 
     {#if users && users.length > 1}
       <div class="mb-4">
