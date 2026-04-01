@@ -4,8 +4,11 @@ import { getRsvpByEventId } from '../services/rsvp';
 
 export const createEvent = async (req: Request, res: Response, next: Function) => {
   const { name, date, startTime, endTime, maxAttendees, location } = req.body;
-  if (!name || !date || !location || !startTime) {
-    return res.status(400).json({ error: "Name, date, startTime, and location are required." });
+  if (!name || !date || !location || !startTime || !endTime) {
+    return res.status(400).json({ error: "Name, date, startTime, endTime, and location are required." });
+  }
+  if (endTime <= startTime) {
+    return res.status(400).json({ error: "endTime must be after startTime." });
   }
   try {
     const event = await createEventService({ name, date, startTime, endTime, maxAttendees, location });

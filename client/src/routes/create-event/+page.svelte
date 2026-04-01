@@ -32,10 +32,14 @@
   async function handleSubmit(event: Event) {
     event.preventDefault();
     // Validate required fields
-    if (!name.trim() || !date.trim() || !location.trim() || !startTime.trim()) {
+    if (!name.trim() || !date.trim() || !location.trim() || !startTime.trim() || !endTime.trim()) {
       alert(
-        "Please fill in all required fields: Name, Date, Starting Time, and Location.",
+        "Please fill in all required fields: Name, Date, Starting Time, Ending Time, and Location.",
       );
+      return;
+    }
+    if (endTime <= startTime) {
+      alert("Ending time must be after starting time.");
       return;
     }
     loading = true;
@@ -141,24 +145,31 @@
       </div>
       <div>
         <label for="startTime" class="mb-1 block font-semibold"
-          >Starting Time</label
+          >Starting Time<span class="ml-1 text-red-500" aria-hidden="true">*</span
+	  ></label
         >
         <input
           id="startTime"
           name="startTime"
           type="time"
           bind:value={startTime}
+          required
+          aria-required="true"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
       <div>
-        <label for="endTime" class="mb-1 block font-semibold">Ending Time</label
+        <label for="endTime" class="mb-1 block font-semibold"
+          >Ending Time<span class="ml-1 text-red-500" aria-hidden="true">*</span
+	  ></label
         >
         <input
           id="endTime"
           name="endTime"
           type="time"
           bind:value={endTime}
+          required
+          aria-required="true"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
