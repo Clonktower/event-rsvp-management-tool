@@ -18,6 +18,11 @@
   import MapLink from '$lib/MapLink.svelte';
   import { isUserOnWaitlist } from '../../../utils/isUserOnWaitlist';
 
+  function addOneHour(time: string): string {
+    const [h, m] = time.split(':').map(Number);
+    return `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
   type RSVPRequestBody = {
     name: string;
     status: typeof rsvp;
@@ -166,7 +171,7 @@
           name={event.name}
           startDate={event.date}
           startTime={event.start_time}
-          endTime={event.end_time}
+          endTime={event.end_time ?? addOneHour(event.start_time)}
           timeZone="Europe/Berlin"
           location={event.location}
           options="['Google', 'Apple', 'iCal', 'Microsoft365', 'MicrosoftTeams', 'Outlook.com', 'Yahoo']"
