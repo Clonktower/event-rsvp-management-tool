@@ -25,6 +25,33 @@ export function deleteEvent(id: string): boolean {
   return result.changes > 0;
 }
 
+// Updates an existing event by its ID
+export function updateEvent(id: string, updates: Partial<Omit<Event, 'id' | 'createdAt'>>): Event | null {
+  const existing = getEventById(id);
+  if (!existing) return null;
+  const { name, date, startTime, endTime, maxAttendees, location } = updates;
+  db.prepare(`
+    UPDATE events SET
+      name = COALESCE(?, name),
+      date = COALESCE(?, date),
+      start_time = COALESCE(?, start_time),
+      end_time = COALESCE(?, end_time),
+      max_attendees = CASE WHEN ? = 1 THEN ? ELSE max_attendees END,
+      location = COALESCE(?, location)
+    WHERE id = ?
+  `).run(
+    name ?? null,
+    date ?? null,
+    startTime ?? null,
+    endTime ?? null,
+    maxAttendees !== undefined ? 1 : 0,
+    maxAttendees ?? null,
+    location ?? null,
+    id
+  );
+  return db.prepare('SELECT * FROM events WHERE id = ?').get(id) as Event;
+}
+
 // Gets all events, ordered by creation date descending
 export function getAllEvents(): Event[] {
   return db.prepare('SELECT * FROM events ORDER BY created_at DESC').all() as Event[];
