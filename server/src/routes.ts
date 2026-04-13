@@ -9,6 +9,7 @@ const router = Router();
 router.post("/admin/login", authenticateAdmin, (_, res) => res.status(200).send())
 router.post("/admin/create-event", authenticateAdmin, eventController.createEvent);
 router.get("/admin/events", authenticateAdmin, eventController.getAllEvents);
+router.patch("/admin/events/:id", authenticateAdmin, eventController.updateEvent);
 router.delete("/admin/events/:id", authenticateAdmin, eventController.deleteEvent);
 router.delete("/admin/events/rsvp/:id", authenticateAdmin, rsvpController.deleteRsvp);
 
