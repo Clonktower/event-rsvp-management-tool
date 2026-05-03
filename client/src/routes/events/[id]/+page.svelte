@@ -6,7 +6,7 @@
   import { getUser } from "../../../utils/getUser";
   import AttendeeList from "$lib/AttendeeList.svelte";
   import RSVPForm from "$lib/RSVPForm.svelte";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { getTotalAttendance } from "../../../utils/getTotalAttendance";
   import { hasUserResponded } from "../../../utils/hasUserResponded";
   import type {User} from "../../../types/User";
@@ -33,9 +33,10 @@
     token?: string
   };
 
-  export let data: { event: Event; rsvp: Rsvp[]; poll: Poll | null };
+  export let data: { event: Event; rsvp: Rsvp[]; poll: Poll | null; clockOffset: number };
   const event = data.event;
   let poll: Poll | null = data.poll;
+  const clockOffset = data.clockOffset ?? 0;
 
   let attendees = data.rsvp;
   $: goingCount = getTotalAttendance(attendees);
@@ -52,6 +53,43 @@
   let users: User[] | undefined;
   let isAdmin = false;
   let mounted = false;
+  let registrationOpen = !event.registration_opens_at;
+  let publicRegistrationOpen = !event.registration_opens_at;
+  let countdown = '';
+  let countdownInterval: ReturnType<typeof setInterval> | null = null;
+
+  function startCountdown() {
+    if (!event.registration_opens_at) {
+      registrationOpen = true;
+      publicRegistrationOpen = true;
+      return;
+    }
+    if (isAdmin) registrationOpen = true;
+    const opensAt = new Date(event.registration_opens_at);
+    function tick() {
+      const diff = opensAt.getTime() - (Date.now() + clockOffset);
+      if (diff <= 0) {
+        registrationOpen = true;
+        publicRegistrationOpen = true;
+        countdown = '';
+        if (countdownInterval) clearInterval(countdownInterval);
+        return;
+      }
+      publicRegistrationOpen = false;
+      const totalSec = Math.floor(diff / 1000);
+      const d = Math.floor(totalSec / 86400);
+      const h = Math.floor((totalSec % 86400) / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      // Intl.DurationFormat not yet typed in TS; cast until types ship
+      countdown = new (Intl as any).DurationFormat(navigator.language, { style: 'digital' })
+        .format({ days: d, hours: h, minutes: m, seconds: s });
+    }
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+  }
+
+  onDestroy(() => { if (countdownInterval) clearInterval(countdownInterval); });
 
   async function removeStaleLocalStorageEntries(eventId: string) {
     const users = getAllUsersForEvent(eventId);
@@ -104,6 +142,8 @@
       isAdmin = res.ok;
     }).catch(() => {
       isAdmin = false;
+    }).finally(() => {
+      startCountdown();
     });
 
     // import the web component only in the browser
@@ -121,28 +161,28 @@
         token: user?.token
       };
 
+      const isAdminEarlyAccess = isAdmin && !!event.registration_opens_at && new Date() < new Date(event.registration_opens_at);
       if (user?.id) {
-        await fetch(`${API_HOST}/events/${event.id}/rsvp/${user.id}`, {
+        const res = await fetch(`${API_HOST}/events/${event.id}/rsvp/${user.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
+        if (!res.ok) return;
       } else {
-        const response = await fetch(`${API_HOST}/events/${event.id}/rsvp`, {
+        const rsvpFetch = isAdminEarlyAccess ? adminFetch : fetch;
+        const response = await rsvpFetch(`${API_HOST}/events/${event.id}/rsvp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        if (!response.ok) return;
 
-          if(data.rsvp) {
-            addNewRsvp(data.rsvp)
-            user = getUser(event.id)
-
-          }
-
+        const data = await response.json();
+        if (data.rsvp) {
+          addNewRsvp(data.rsvp);
+          user = getUser(event.id);
         }
       }
 
@@ -256,6 +296,32 @@
 
     <AttendeeList {attendees} maxAttendees={event.max_attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
 
+    {#if !registrationOpen}
+      <div class="mb-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 px-4 py-4 text-center">
+        <p class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">
+          Registration opens in <span class="font-mono">{countdown}</span>
+        </p>
+        {#if event.registration_opens_at}
+          <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+            {new Date(event.registration_opens_at).toLocaleString()}
+          </p>
+        {/if}
+      </div>
+    {/if}
+
+    {#if isAdmin && !publicRegistrationOpen}
+      <div class="mb-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 px-4 py-3 text-center">
+        <p class="text-sm font-semibold text-blue-800 dark:text-blue-200">
+          Public registration opens in <span class="font-mono">{countdown}</span>
+        </p>
+        {#if event.registration_opens_at}
+          <p class="mt-1 text-xs text-blue-700 dark:text-blue-300">
+            {new Date(event.registration_opens_at).toLocaleString()}
+          </p>
+        {/if}
+      </div>
+    {/if}
+
     <PollWidget {poll} {user} {isAdmin} eventId={event.id} />
 
     {#if users && users.length > 1}
@@ -287,6 +353,7 @@
         bind:attendeeName
         onSubmit={handleRsvpSubmit}
         onNameInput={e => attendeeName = (e.target as HTMLInputElement)?.value}
+        disabled={!registrationOpen}
       />
     {:else if status !== undefined}
       {#if rsvp === 'going' && isUserOnWaitlist(attendees, user?.id ?? '', event.max_attendees)}
