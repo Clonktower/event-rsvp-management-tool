@@ -50,12 +50,12 @@ export const getAllEvents = async (req: Request, res: Response, next: Function) 
 
 export const updateEvent = async (req: Request, res: Response, next: Function) => {
   const { id } = req.params;
-  const { name, date, startTime, endTime, maxAttendees, location } = req.body;
+  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt } = req.body;
   if (endTime && startTime && endTime <= startTime) {
     return res.status(400).json({ error: "endTime must be after startTime." });
   }
   try {
-    const event = await updateEventService(id, { name, date, startTime, endTime, maxAttendees, location });
+    const event = await updateEventService(id, { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt });
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }

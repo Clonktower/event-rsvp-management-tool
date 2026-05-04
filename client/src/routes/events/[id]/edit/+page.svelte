@@ -13,6 +13,7 @@
   let location = "";
   let startTime = "";
   let endTime = "";
+  let registrationOpensAt = "";
   let loading = false;
   let fetchLoading = true;
   let authError = false;
@@ -44,6 +45,11 @@
       endTime = event.end_time ?? "";
       maxAttendees = event.max_attendees ?? "";
       location = event.location;
+      if (event.registration_opens_at) {
+        const d = new Date(event.registration_opens_at);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        registrationOpensAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
     } catch {
       fetchError = "Failed to load event.";
     } finally {
@@ -66,11 +72,11 @@
       const response = await adminFetch(`${API_HOST}/admin/events/${eventId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, date, startTime, endTime, maxAttendees: maxAttendees === "" ? null : maxAttendees, location }),
+        body: JSON.stringify({ name, date, startTime, endTime, maxAttendees: maxAttendees === "" ? null : maxAttendees, location, registrationOpensAt: registrationOpensAt ? new Date(registrationOpensAt).toISOString() : null }),
       });
       const data = await response.json();
       if (response.ok) {
-        goto(`/events/${eventId}`);
+        goto(`/events/${eventId}`, { invalidateAll: true });
       } else {
         alert(data.error || "Failed to update event.");
       }
@@ -189,6 +195,16 @@
           bind:value={location}
           required
           aria-required="true"
+          class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
+        />
+      </div>
+      <div>
+        <label for="registrationOpensAt" class="mb-1 block font-semibold">Registration Opens At</label>
+        <input
+          id="registrationOpensAt"
+          name="registrationOpensAt"
+          type="datetime-local"
+          bind:value={registrationOpensAt}
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
       </div>
