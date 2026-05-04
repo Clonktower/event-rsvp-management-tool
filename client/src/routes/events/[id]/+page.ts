@@ -7,5 +7,5 @@ export const load = async ({ params, fetch }) => {
     return { event: null };
   }
   const data = await res.json();
-  return { event: data.event, rsvp: data.rsvp };
+  return { event: data.event, rsvp: data.rsvp, poll: data.poll ?? null };
 };
