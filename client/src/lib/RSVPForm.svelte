@@ -5,6 +5,7 @@
   export let attendeeName: string;
   export let onSubmit: (e: Event) => void;
   export let onNameInput: (e: Event) => void;
+  export let disabled = false;
 
   let rsvpOptions: { value: RsvpStatus; label: string }[] = [
     { value: "going", label: "Going" },
@@ -56,6 +57,7 @@
 
   <button
     type="submit"
+    {disabled}
     class="self-start rounded bg-primary px-6 py-2 font-bold text-white shadow transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-gray-400"
     >Submit</button
   >

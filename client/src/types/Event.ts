@@ -7,4 +7,5 @@ export type Event = {
   max_attendees: number;
   location: string;
   created_at?: string;
+  registration_opens_at?: string;
 };

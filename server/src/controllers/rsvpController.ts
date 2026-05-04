@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { deleteRsvpById, rsvpToEventService, updateRsvpByToken } from "../services/rsvp";
+import { getEventById as getEventByIdService } from "../services/event";
 import { isValidStatus } from "../validators/isValidStatus";
 import { getMyRsvpsService } from '../services/rsvp';
-
+import { isAdminRequest } from "../middlewares/auth";
 
 export const rsvpToEvent = async (req: Request, res: Response, next: Function) => {
   try {
@@ -17,8 +18,19 @@ export const rsvpToEvent = async (req: Request, res: Response, next: Function) =
       return res.status(400).json({ error: "Invalid RSVP status. Must be 'going', 'not_going', or 'maybe'." });
     }
 
+    const event = await getEventByIdService(eventId);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found." });
+    }
+
+    const registrationOpensAt = (event as any).registration_opens_at as string | null;
+    if (registrationOpensAt && Date.now() < new Date(registrationOpensAt).getTime() - 1000) {
+      if (!isAdminRequest(req)) {
+        return res.status(403).json({ error: "Registration not yet open.", registrationOpensAt });
+      }
+    }
+
     if (!attendeeId) {
-      // Generate a new UUID for attendeeId if not provided
       attendeeId = require('uuid').v4();
     }
 
