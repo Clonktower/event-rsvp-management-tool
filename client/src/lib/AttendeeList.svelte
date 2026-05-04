@@ -102,14 +102,14 @@
                 </div>
               </li>
               {#each attendees.filter((a) => a.status === "going").slice(0, maxAttendees) as a (a.id)}
-                <li class="flex flex-row items-center justify-between gap-4 px-4 py-2">
-                  <div class="flex flex-row items-center gap-4">
-                    <span class="font-medium">{a.name}</span>
+                <li class="flex flex-row items-center gap-4 px-4 py-2">
+                  <div class="flex min-w-0 flex-row items-center gap-4">
+                    <span class="truncate font-medium">{a.name}</span>
                     {#if a.guests > 0}
                       <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? "s" : ""})</span>
                     {/if}
                   </div>
-                  <span class="ml-auto text-xs text-gray-400">{a.created_at ? formatRsvpTime(a.created_at) : ""}</span>
+                  <span class="ml-auto shrink-0 whitespace-nowrap text-xs text-gray-400">{a.created_at ? formatRsvpTime(a.created_at) : ""}</span>
                   {#if showDeleteButton}
                     <button
                       type="button"
@@ -137,14 +137,14 @@
                 </div>
               </li>
               {#each attendees.filter((a) => a.status === "going").slice(maxAttendees) as a (a.id)}
-                <li class="flex flex-row items-center justify-between gap-4 px-4 py-2">
-                  <div class="flex flex-row items-center gap-4">
-                    <span class="font-medium">{a.name}</span>
+                <li class="flex flex-row items-center gap-4 px-4 py-2">
+                  <div class="flex min-w-0 flex-row items-center gap-4">
+                    <span class="truncate font-medium">{a.name}</span>
                     {#if a.guests > 0}
                       <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? "s" : ""})</span>
                     {/if}
                   </div>
-                  <span class="ml-auto text-xs text-gray-400">{a.created_at ? formatRsvpTime(a.created_at) : ""}</span>
+                  <span class="ml-auto shrink-0 whitespace-nowrap text-xs text-gray-400">{a.created_at ? formatRsvpTime(a.created_at) : ""}</span>
                   {#if showDeleteButton}
                     <button
                       type="button"
@@ -173,14 +173,14 @@
                 </div>
               </li>
               {#each attendees.filter((a) => a.status === group.key) as a (a.id)}
-                <li class="flex flex-row items-center justify-between gap-4 px-4 py-2">
-                  <div class="flex flex-row items-center gap-4">
-                    <span class="font-medium">{a.name}</span>
+                <li class="flex flex-row items-center gap-4 px-4 py-2">
+                  <div class="flex min-w-0 flex-row items-center gap-4">
+                    <span class="truncate font-medium">{a.name}</span>
                     {#if a.guests > 0}
                       <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? "s" : ""})</span>
                     {/if}
                   </div>
-                  <span class="ml-auto text-xs text-gray-400">{a.created_at ? formatRsvpTime(a.created_at) : ""}</span>
+                  <span class="ml-auto shrink-0 whitespace-nowrap text-xs text-gray-400">{a.created_at ? formatRsvpTime(a.created_at) : ""}</span>
                   {#if showDeleteButton}
                     <button
                       type="button"
@@ -209,14 +209,14 @@
                 </div>
               </li>
               {#each attendees.filter((a) => a.status === group.key) as a (a.id)}
-                <li class="flex flex-row items-center justify-between gap-4 px-4 py-2">
-                  <div class="flex flex-row items-center gap-4">
-                    <span class="font-medium">{a.name}</span>
+                <li class="flex flex-row items-center gap-4 px-4 py-2">
+                  <div class="flex min-w-0 flex-row items-center gap-4">
+                    <span class="truncate font-medium">{a.name}</span>
                     {#if a.guests > 0}
                       <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? "s" : ""})</span>
                     {/if}
                   </div>
-                  <span class="ml-auto text-xs text-gray-400">{a.created_at ? formatRsvpTime(a.created_at) : ""}</span>
+                  <span class="ml-auto shrink-0 whitespace-nowrap text-xs text-gray-400">{a.created_at ? formatRsvpTime(a.created_at) : ""}</span>
                   {#if showDeleteButton}
                     <button
                       type="button"
