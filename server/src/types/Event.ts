@@ -7,5 +7,6 @@ export type Event = {
   maxAttendees?: number;
   location: string;
   createdAt?: string; // ISO date string (YYYY-MM-DDTHH:mm:ss.sssZ)
+  registrationOpensAt?: string; // ISO UTC datetime — when public registration opens
 };
 

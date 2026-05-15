@@ -9,6 +9,7 @@
   let location = "";
   let startTime = "";
   let endTime = "";
+  let registrationOpensAtLocal = "";
   let loading = false;
   let createdEventId: string | null = null;
   let authError = false;
@@ -44,17 +45,14 @@
     }
     loading = true;
     try {
+      const body: Record<string, unknown> = { name, date, startTime, endTime, maxAttendees, location };
+      if (registrationOpensAtLocal) {
+        body.registrationOpensAt = new Date(registrationOpensAtLocal).toISOString();
+      }
       const response = await adminFetch(`${API_HOST}/admin/create-event`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          date,
-          startTime,
-          endTime,
-          maxAttendees,
-          location,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await response.json();
       if (response.ok) {
@@ -67,6 +65,7 @@
         endTime = "";
         maxAttendees = "";
         location = "";
+        registrationOpensAtLocal = "";
         // Optionally, you could also focus the first input
       } else {
         alert(data.error || "Failed to create event.");
@@ -172,6 +171,17 @@
           aria-required="true"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
+      </div>
+      <div>
+        <label for="registrationOpensAt" class="mb-1 block font-semibold">Registration Opens At</label>
+        <input
+          id="registrationOpensAt"
+          name="registrationOpensAt"
+          type="datetime-local"
+          bind:value={registrationOpensAtLocal}
+          class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
+        />
+        <p class="mt-1 text-xs text-gray-500">Leave empty to open registration immediately. Admins can always register early.</p>
       </div>
       <div>
         <label for="maxAttendees" class="mb-1 block font-semibold"

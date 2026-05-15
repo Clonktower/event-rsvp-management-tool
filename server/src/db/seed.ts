@@ -11,6 +11,16 @@ function migrationAddTokenColumnToRsvp() {
   }
 }
 
+// Migration: Add registration_opens_at column to events if missing
+function migrationAddRegistrationOpensAtToEvents() {
+  type PragmaColumn = { name: string };
+  const pragma = db.prepare("PRAGMA table_info(events);").all() as PragmaColumn[];
+  if (!pragma.some(col => col.name === 'registration_opens_at')) {
+    db.prepare("ALTER TABLE events ADD COLUMN registration_opens_at TEXT;").run();
+    console.log("Added 'registration_opens_at' column to events table.");
+  }
+}
+
 // Seeds the SQLite database with required tables
 export default function seed() {
   try {
@@ -45,6 +55,7 @@ export default function seed() {
     `).run();
 
     migrationAddTokenColumnToRsvp();
+    migrationAddRegistrationOpensAtToEvents();
 
     // Create polls table
     db.prepare(`
