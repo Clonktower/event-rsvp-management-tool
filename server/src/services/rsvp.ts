@@ -42,15 +42,14 @@ export async function getMyRsvpsService(pairs: { rsvpId: string, eventId: string
   const wherePairs = pairs.map(() => '(?, ?)').join(', ');
   const flatParams = pairs.flatMap(({ rsvpId, eventId }) => [rsvpId, eventId]);
   const sql = `
-    SELECT e.*, r.status as your_status
+    SELECT e.*, r.status as your_status, r.name as rsvp_name
     FROM rsvp r
     JOIN events e ON r.event_id = e.id
     WHERE (r.id, r.event_id) IN (${wherePairs})
   `;
   const rows = db.prepare(sql).all(...flatParams);
-  // Return as { event, yourStatus }
   return rows.map(row => {
-    const { your_status, ...event } = row as any;
-    return { event, yourStatus: your_status };
+    const { your_status, rsvp_name, ...event } = row as any;
+    return { event, yourStatus: your_status, attendeeName: rsvp_name };
   });
 }
