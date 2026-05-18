@@ -1,3 +1,4 @@
+import config from './config'
 import express, { Request, Response } from "express";
 import router from "./routes";
 import { errorHandler } from './utils/errorHandler';
@@ -5,7 +6,6 @@ import seed from './db/seed'; // ensure the database is seeded before starting t
 import cors from 'cors';
 import { rateLimit } from 'express-rate-limit'
 import { requestInfoLogger } from './middlewares/logger';
-import config from './config'
 
 // Ensure the database is seeded before starting the server
 seed()
