@@ -18,7 +18,7 @@ PORT=3000
 NODE_ENV=development
 ADMIN_USER=your_admin_user
 ADMIN_PASSWORD=your_admin_password
-SQLITE_DB_PATH=../data/event_rsvp.db # optional, default is ../data/event_rsvp.db
+SQLITE_DB_PATH=./data/event_rsvp.db # optional, default is ./data/event_rsvp.db
 ```
 
 ## Setup
@@ -46,4 +46,4 @@ SQLITE_DB_PATH=../data/event_rsvp.db # optional, default is ../data/event_rsvp.d
 ## Notes
 - All admin routes require a Basic Authorization header: `Basic USER:PASS` (credentials from `.env`).
 - Uses SQLite for storage (no external DB required).
-- Data file defaults to `data/event_rsvp.db` (relative to project root).
+- Data file defaults to `data/event_rsvp.db` (relative to the `server/` directory).
