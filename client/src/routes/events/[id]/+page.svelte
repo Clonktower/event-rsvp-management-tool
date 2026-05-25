@@ -55,6 +55,7 @@
   let mounted = false;
   let registrationOpen = !event.registration_opens_at;
   let publicRegistrationOpen = !event.registration_opens_at;
+  let countdownReady = !event.registration_opens_at;
   let countdown = '';
   let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -62,6 +63,7 @@
     if (!event.registration_opens_at) {
       registrationOpen = true;
       publicRegistrationOpen = true;
+      countdownReady = true;
       return;
     }
     if (isAdmin) registrationOpen = true;
@@ -72,6 +74,7 @@
         registrationOpen = true;
         publicRegistrationOpen = true;
         countdown = '';
+        countdownReady = true;
         if (countdownInterval) clearInterval(countdownInterval);
         return;
       }
@@ -84,6 +87,7 @@
       // Intl.DurationFormat not yet typed in TS; cast until types ship
       countdown = new (Intl as any).DurationFormat(navigator.language, { style: 'digital' })
         .format({ days: d, hours: h, minutes: m, seconds: s });
+      countdownReady = true;
     }
     tick();
     countdownInterval = setInterval(tick, 1000);
@@ -296,7 +300,7 @@
 
     <AttendeeList {attendees} maxAttendees={event.max_attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
 
-    {#if !registrationOpen}
+    {#if countdownReady && !registrationOpen}
       <div class="mb-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 px-4 py-4 text-center">
         <p class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">
           Registration opens in <span class="font-mono">{countdown}</span>
@@ -309,7 +313,7 @@
       </div>
     {/if}
 
-    {#if isAdmin && !publicRegistrationOpen}
+    {#if countdownReady && isAdmin && !publicRegistrationOpen}
       <div class="mb-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 px-4 py-3 text-center">
         <p class="text-sm font-semibold text-blue-800 dark:text-blue-200">
           Public registration opens in <span class="font-mono">{countdown}</span>
