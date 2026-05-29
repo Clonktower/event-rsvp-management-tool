@@ -1,0 +1,44 @@
+name: Client tests
+
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - '.github/workflows/client-tests.yml'
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    env:
+      # Force a project-local Yarn cache so the cache step below is deterministic.
+      YARN_ENABLE_GLOBAL_CACHE: 'false'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # client/ has no .nvmrc; pin to the same version the server uses.
+          node-version: '24.7.0'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: client/.yarn/cache
+          key: yarn-client-${{ runner.os }}-${{ hashFiles('client/yarn.lock') }}
+          restore-keys: |
+            yarn-client-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run tests
+        run: yarn test
