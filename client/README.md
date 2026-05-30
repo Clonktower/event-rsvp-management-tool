@@ -51,3 +51,17 @@ Tests live in `src/__tests__/`:
 - `utils/` — unit tests for the utility functions
 - `components/` and `routes/` — component and page tests rendered with
   [@testing-library/svelte](https://testing-library.com/docs/svelte-testing-library/intro/)
+
+## End-to-end tests
+
+End-to-end tests run with [Playwright](https://playwright.dev) against the real
+app. The Playwright config starts the API server (in-memory SQLite) and the
+SvelteKit dev server automatically before the tests.
+
+```sh
+yarn playwright install chromium   # one-time: install the browser
+yarn test:e2e                       # run the suite
+yarn test:e2e:ui                    # interactive UI mode
+```
+
+Specs live in `e2e/`.
