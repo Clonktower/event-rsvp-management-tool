@@ -36,3 +36,17 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+
+## End-to-end tests
+
+End-to-end tests run with [Playwright](https://playwright.dev) against the real
+app. The Playwright config starts the API server (in-memory SQLite) and the
+SvelteKit dev server automatically before the tests.
+
+```sh
+yarn playwright install chromium   # one-time: install the browser
+yarn test:e2e                       # run the suite
+yarn test:e2e:ui                    # interactive UI mode
+```
+
+Specs live in `e2e/`.
