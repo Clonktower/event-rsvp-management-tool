@@ -14,6 +14,7 @@
   let startTime = "";
   let endTime = "";
   let registrationOpensAt = "";
+  let selectionMode: "fifo" | "lottery" = "fifo";
   let loading = false;
   let fetchLoading = true;
   let authError = false;
@@ -45,6 +46,7 @@
       endTime = event.end_time ?? "";
       maxAttendees = event.max_attendees ?? "";
       location = event.location;
+      selectionMode = event.selection_mode === "lottery" ? "lottery" : "fifo";
       if (event.registration_opens_at) {
         const d = new Date(event.registration_opens_at);
         const pad = (n: number) => String(n).padStart(2, '0');
@@ -72,7 +74,7 @@
       const response = await adminFetch(`${API_HOST}/admin/events/${eventId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, date, startTime, endTime, maxAttendees: maxAttendees === "" ? null : maxAttendees, location, registrationOpensAt: registrationOpensAt ? new Date(registrationOpensAt).toISOString() : null }),
+        body: JSON.stringify({ name, date, startTime, endTime, maxAttendees: maxAttendees === "" ? null : maxAttendees, location, registrationOpensAt: registrationOpensAt ? new Date(registrationOpensAt).toISOString() : null, selectionMode }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -197,6 +199,25 @@
           aria-required="true"
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
+      </div>
+      <div>
+        <label for="selectionMode" class="mb-1 block font-semibold">Seat Allocation</label>
+        <select
+          id="selectionMode"
+          name="selectionMode"
+          bind:value={selectionMode}
+          class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
+        >
+          <option value="fifo">First come, first served</option>
+          <option value="lottery">Lottery (random draw)</option>
+        </select>
+        <p class="mt-1 text-xs text-gray-500">
+          {#if selectionMode === "lottery"}
+            Sign-ups stay open with no rush; run the draw from the event page when the entry window closes.
+          {:else}
+            Seats fill in the order people sign up.
+          {/if}
+        </p>
       </div>
       <div>
         <label for="registrationOpensAt" class="mb-1 block font-semibold">Registration Opens At</label>

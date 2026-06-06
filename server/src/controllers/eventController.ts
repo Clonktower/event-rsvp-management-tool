@@ -4,15 +4,18 @@ import { getRsvpByEventId } from '../services/rsvp';
 import { getPollByEventId } from '../services/poll';
 
 export const createEvent = async (req: Request, res: Response, next: Function) => {
-  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt } = req.body;
+  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt, selectionMode } = req.body;
   if (!name || !date || !location || !startTime || !endTime) {
     return res.status(400).json({ error: "Name, date, startTime, endTime, and location are required." });
   }
   if (endTime <= startTime) {
     return res.status(400).json({ error: "endTime must be after startTime." });
   }
+  if (selectionMode !== undefined && selectionMode !== 'fifo' && selectionMode !== 'lottery') {
+    return res.status(400).json({ error: "selectionMode must be 'fifo' or 'lottery'." });
+  }
   try {
-    const event = await createEventService({ name, date, startTime, endTime, maxAttendees, location, registrationOpensAt });
+    const event = await createEventService({ name, date, startTime, endTime, maxAttendees, location, registrationOpensAt, selectionMode });
     res.status(201).json({
       message: "Event created successfully!",
       event
@@ -50,12 +53,15 @@ export const getAllEvents = async (req: Request, res: Response, next: Function) 
 
 export const updateEvent = async (req: Request, res: Response, next: Function) => {
   const { id } = req.params;
-  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt } = req.body;
+  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt, selectionMode } = req.body;
   if (endTime && startTime && endTime <= startTime) {
     return res.status(400).json({ error: "endTime must be after startTime." });
   }
+  if (selectionMode !== undefined && selectionMode !== 'fifo' && selectionMode !== 'lottery') {
+    return res.status(400).json({ error: "selectionMode must be 'fifo' or 'lottery'." });
+  }
   try {
-    const event = await updateEventService(id, { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt });
+    const event = await updateEventService(id, { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt, selectionMode });
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
