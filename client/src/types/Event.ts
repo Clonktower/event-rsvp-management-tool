@@ -8,4 +8,6 @@ export type Event = {
   location: string;
   created_at?: string;
   registration_opens_at?: string;
+  selection_mode?: "fifo" | "lottery";
+  drawn_at?: string | null;
 };
