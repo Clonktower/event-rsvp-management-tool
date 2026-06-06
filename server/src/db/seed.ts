@@ -21,6 +21,16 @@ function migrationAddRegistrationOpensAtToEvents() {
   }
 }
 
+// Migration: Add max_votes column to polls if missing
+function migrationAddMaxVotesToPolls() {
+  type PragmaColumn = { name: string };
+  const pragma = db.prepare("PRAGMA table_info(polls);").all() as PragmaColumn[];
+  if (!pragma.some(col => col.name === 'max_votes')) {
+    db.prepare("ALTER TABLE polls ADD COLUMN max_votes INTEGER;").run();
+    console.log("Added 'max_votes' column to polls table.");
+  }
+}
+
 // Seeds the SQLite database with required tables
 export default function seed() {
   try {
@@ -64,10 +74,13 @@ export default function seed() {
         event_id TEXT NOT NULL,
         title TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'open',
+        max_votes INTEGER,
         created_at DATETIME NOT NULL DEFAULT (datetime('now')),
         FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
       );
     `).run();
+
+    migrationAddMaxVotesToPolls();
 
     // Create poll_options table
     db.prepare(`

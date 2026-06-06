@@ -13,6 +13,7 @@ export type Poll = {
   event_id: string;
   title: string;
   status: 'open' | 'closed';
+  max_votes: number | null;
   created_at: string;
   options: PollOption[];
 };

@@ -51,6 +51,29 @@ describe('POST /admin/events/:id/poll', () => {
       .expect(201);
     expect(res.body.poll.status).toBe('open');
     expect(res.body.poll.options).toHaveLength(2);
+    expect(res.body.poll.max_votes).toBeNull();
+  });
+
+  it('creates a poll with a max_votes limit', async () => {
+    const res = await request(server)
+      .post(`/admin/events/${eventId}/poll`)
+      .set('Authorization', AUTH)
+      .send({ title: 'Where?', options: TWO_OPTIONS, maxVotes: 1 })
+      .expect(201);
+    expect(res.body.poll.max_votes).toBe(1);
+  });
+
+  it('returns 400 when maxVotes is not a positive integer', async () => {
+    await request(server)
+      .post(`/admin/events/${eventId}/poll`)
+      .set('Authorization', AUTH)
+      .send({ title: 'Where?', options: TWO_OPTIONS, maxVotes: 0 })
+      .expect(400);
+    await request(server)
+      .post(`/admin/events/${eventId}/poll`)
+      .set('Authorization', AUTH)
+      .send({ title: 'Where?', options: TWO_OPTIONS, maxVotes: 1.5 })
+      .expect(400);
   });
 
   it('returns 400 when title is missing', async () => {
@@ -287,6 +310,24 @@ describe('POST /polls/:id/vote', () => {
       .post(`/polls/${pollId}/vote`)
       .send({ rsvpId, token: 'wrongtoken', optionIds: [created.body.poll.options[0].id] })
       .expect(403);
+  });
+
+  it('returns 400 when voting for more options than max_votes allows', async () => {
+    const created = await request(server)
+      .post(`/admin/events/${eventId}/poll`)
+      .set('Authorization', AUTH)
+      .send({ title: 'Where?', options: TWO_OPTIONS, maxVotes: 1 });
+    const poll = created.body.poll;
+
+    const res = await request(server)
+      .post(`/polls/${poll.id}/vote`)
+      .send({ rsvpId, token: rsvpToken, optionIds: poll.options.map((o: any) => o.id) })
+      .expect(400);
+    expect(res.body.error).toMatch(/at most 1 option/);
+
+    // No votes should have been recorded.
+    const after = await request(server).get(`/events/${eventId}`);
+    expect(after.body.poll.options.every((o: any) => o.votes.length === 0)).toBe(true);
   });
 
   it('returns 400 when required fields are missing', async () => {
