@@ -37,6 +37,21 @@ You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
 
+## Testing
+
+Tests run with [Vitest](https://vitest.dev) in a jsdom environment:
+
+```sh
+yarn test          # run once
+yarn test:watch    # watch mode
+yarn test:coverage # with coverage
+```
+
+Tests live in `src/__tests__/`:
+- `utils/` — unit tests for the utility functions
+- `components/` and `routes/` — component and page tests rendered with
+  [@testing-library/svelte](https://testing-library.com/docs/svelte-testing-library/intro/)
+
 ## End-to-end tests
 
 End-to-end tests run with [Playwright](https://playwright.dev) against the real
