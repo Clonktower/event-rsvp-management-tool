@@ -41,6 +41,11 @@
   let attendees = data.rsvp;
   $: goingCount = getTotalAttendance(attendees);
 
+  const isLottery = event?.selection_mode === "lottery";
+  let drawnAt: string | null = event?.drawn_at ?? null;
+  let drawing = false;
+  let drawError = "";
+
   let rsvp: RsvpStatus = "going";
   let attendeeName = "";
   let guests = "0";
@@ -53,13 +58,17 @@
   let users: User[] | undefined;
   let isAdmin = false;
   let mounted = false;
-  let registrationOpen = !event.registration_opens_at;
-  let publicRegistrationOpen = !event.registration_opens_at;
+  // Lottery sign-ups are never gated by registration_opens_at — the draw is the
+  // gate, so the form stays open (matches the server, which skips the gate for
+  // lottery). registration_opens_at, if set, is only an informational entry-window
+  // hint in lottery mode.
+  let registrationOpen = isLottery || !event.registration_opens_at;
+  let publicRegistrationOpen = isLottery || !event.registration_opens_at;
   let countdown = '';
   let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
   function startCountdown() {
-    if (!event.registration_opens_at) {
+    if (isLottery || !event.registration_opens_at) {
       registrationOpen = true;
       publicRegistrationOpen = true;
       return;
@@ -161,7 +170,6 @@
         token: user?.token
       };
 
-      const isAdminEarlyAccess = isAdmin && !!event.registration_opens_at && new Date() < new Date(event.registration_opens_at);
       if (user?.id) {
         const res = await fetch(`${API_HOST}/events/${event.id}/rsvp/${user.id}`, {
           method: "PATCH",
@@ -170,7 +178,10 @@
         });
         if (!res.ok) return;
       } else {
-        const rsvpFetch = isAdminEarlyAccess ? adminFetch : fetch;
+        // Send the RSVP with admin credentials when logged in, so the server can
+        // identify it as an admin sign-up — that's what stamps the lottery
+        // priority weight and (for FIFO) grants early-registration access.
+        const rsvpFetch = isAdmin ? adminFetch : fetch;
         const response = await rsvpFetch(`${API_HOST}/events/${event.id}/rsvp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -199,6 +210,33 @@
       setTimeout(() => (showToast = false), 2000);
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  async function runDraw() {
+    if (!window.confirm('Run the lottery draw now? This randomly orders everyone who is going and cannot be undone.')) {
+      return;
+    }
+    drawError = '';
+    drawing = true;
+    try {
+      const res = await adminFetch(`${API_HOST}/admin/events/${event.id}/draw`, { method: 'POST' });
+      if (res.ok) {
+        const body = await res.json();
+        drawnAt = body.drawnAt ?? new Date().toISOString();
+        const refetchRes = await fetch(`${API_HOST}/events/${event.id}`);
+        if (refetchRes.ok) {
+          const refetchData = await refetchRes.json();
+          attendees = refetchData.rsvp;
+        }
+      } else {
+        const body = await res.json().catch(() => ({}));
+        drawError = body.error || 'Failed to run the draw.';
+      }
+    } catch {
+      drawError = 'Error running the draw.';
+    } finally {
+      drawing = false;
     }
   }
 
@@ -294,7 +332,37 @@
       </div>
     {/if}
 
-    <AttendeeList {attendees} maxAttendees={event.max_attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} />
+    {#if isLottery}
+      <div class="mb-4 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 dark:border-purple-700 dark:bg-purple-900/20">
+        {#if drawnAt}
+          <p class="text-sm font-semibold text-purple-800 dark:text-purple-200">
+            🎲 Seats were allocated by random draw on {new Date(drawnAt).toLocaleString()}.
+          </p>
+          <p class="mt-1 text-xs text-purple-700 dark:text-purple-300">
+            The list below is in the drawn order. Anyone who signs up now joins the end of the waitlist.
+          </p>
+        {:else}
+          <p class="text-sm font-semibold text-purple-800 dark:text-purple-200">
+            🎲 This is a lottery event — seats are allocated by a random draw, not by sign-up order.
+          </p>
+          {#if isAdmin}
+            <button
+              type="button"
+              class="mt-3 flex items-center justify-center rounded bg-purple-600 px-4 py-2 text-sm font-bold text-white shadow transition-colors hover:bg-purple-700 disabled:opacity-60"
+              on:click={runDraw}
+              disabled={drawing}
+            >
+              {drawing ? 'Drawing…' : 'Run the draw'}
+            </button>
+          {/if}
+        {/if}
+        {#if drawError}
+          <p class="mt-2 text-xs font-semibold text-red-600 dark:text-red-400">{drawError}</p>
+        {/if}
+      </div>
+    {/if}
+
+    <AttendeeList {attendees} maxAttendees={event.max_attendees} onDelete={onDeleteAttendee} showDeleteButton={isAdmin} {isLottery} lotteryPredraw={isLottery && !drawnAt} />
 
     {#if !registrationOpen}
       <div class="mb-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 px-4 py-4 text-center">
@@ -356,7 +424,7 @@
         disabled={!registrationOpen}
       />
     {:else if status !== undefined}
-      {#if rsvp === 'going' && isUserOnWaitlist(attendees, user?.id ?? '', event.max_attendees)}
+      {#if rsvp === 'going' && !(isLottery && !drawnAt) && isUserOnWaitlist(attendees, user?.id ?? '', event.max_attendees)}
         <div class="mb-4 flex w-full items-center justify-center">
           <div class="relative w-full rounded px-4 py-2 font-semibold flex items-center bg-blue-100 dark:bg-blue-300 text-blue-900 dark:text-blue-800">
             <span>

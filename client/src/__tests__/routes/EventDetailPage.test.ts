@@ -201,6 +201,48 @@ describe('EventDetailPage — admin view', () => {
       expect(screen.getByRole('link', { name: 'Edit event' })).toBeInTheDocument();
     });
   });
+
+  it('sends admin credentials on a sign-up so the server can stamp lottery priority', async () => {
+    // Regression guard: a logged-in admin's sign-up must carry credentials, or the
+    // server treats it as anonymous (priority_weight 0) and the admin gets no
+    // priority and no badge. The client only did this during early access before.
+    localStorage.setItem('credentials', 'admin:secret');
+    const fetchMock = vi.fn().mockImplementation((url: RequestInfo, opts?: RequestInit) => {
+      const u = String(url);
+      if (u.endsWith('/events/evt-1/rsvp') && opts?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          status: 201,
+          json: async () => ({ rsvp: { id: 'new-id', name: 'Boss', event_id: 'evt-1', status: 'going', guests: 0, token: 'tok-new' } }),
+        } as Response);
+      }
+      // Admin-login check and the post-submit event refetch.
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({ rsvp: [], event: { ...baseEvent, selection_mode: 'lottery' }, poll: null, serverTime: Date.now() }),
+      } as Response);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const lotteryEvent: Event = { ...baseEvent, selection_mode: 'lottery' };
+    render(EventDetailPage, { props: { data: buildData(lotteryEvent) } });
+
+    // Wait for the admin check to resolve (the draw button only renders for admins).
+    await screen.findByRole('button', { name: 'Run the draw' });
+
+    await fireEvent.input(screen.getByPlaceholderText('Enter your name'), { target: { value: 'Boss' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => {
+      const post = fetchMock.mock.calls.find(
+        ([url, opts]) => String(url).endsWith('/events/evt-1/rsvp') && (opts as RequestInit)?.method === 'POST',
+      );
+      expect(post).toBeTruthy();
+      const headers = (post![1] as RequestInit).headers as Headers;
+      expect(headers.get('Authorization')).toBe('Basic admin:secret');
+    });
+  });
 });
 
 describe('EventDetailPage — null event (not found)', () => {
@@ -359,5 +401,29 @@ describe('EventDetailPage — registration opens in future', () => {
     });
 
     (globalThis as any).Intl = OrigIntl;
+  });
+
+  it('does not gate a lottery sign-up behind registration_opens_at (the draw is the gate)', async () => {
+    // Regression guard: in lottery mode the server ignores registration_opens_at,
+    // so the client must too — a non-admin visiting before the entry-window time
+    // must still be able to sign up, not see a "Registration opens in" countdown
+    // with a disabled form.
+    const futureDate = new Date(Date.now() + 3_600_000).toISOString();
+    const event: Event = { ...baseEvent, selection_mode: 'lottery', registration_opens_at: futureDate };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({}),
+      } as Response),
+    );
+
+    render(EventDetailPage, { props: { data: buildData(event) } });
+
+    const submit = await screen.findByRole('button', { name: 'Submit' });
+    expect(submit).not.toBeDisabled();
+    expect(screen.queryByText(/Registration opens in/)).not.toBeInTheDocument();
   });
 });
