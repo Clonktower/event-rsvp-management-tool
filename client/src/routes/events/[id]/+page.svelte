@@ -91,18 +91,14 @@
 
   onDestroy(() => { if (countdownInterval) clearInterval(countdownInterval); });
 
-  async function removeStaleLocalStorageEntries(eventId: string) {
+  // Drops stored RSVP tokens whose RSVP no longer exists server-side. Uses the
+  // `rsvps` from the page load rather than a fresh fetch; the load refetches on
+  // every navigation right before this mount, so the data is current.
+  function removeStaleLocalStorageEntries(eventId: string, rsvps: Rsvp[]) {
     const users = getAllUsersForEvent(eventId);
     if (!users || users.length === 0) return;
 
-    const res = await fetch(`${API_HOST}/events/${event.id}`);
-    if (!res.ok) {
-      console.error('Failed to sync RSVPs');
-      return;
-    }
-    const fetchData = await res.json();
-    const rsvps = fetchData.rsvp;
-    const validIds = rsvps.map((r: { id: any; }) => r.id);
+    const validIds = rsvps.map((r) => r.id);
 
     // Remove stale localStorage entries
     const myEvents = JSON.parse(localStorage.getItem('my_events') || '{}');
@@ -122,10 +118,10 @@
     localStorage.setItem('my_events', JSON.stringify(myEvents));
   }
 
-  onMount(async () => {
+  onMount(() => {
     mounted = true;
 
-    await removeStaleLocalStorageEntries(event.id);
+    removeStaleLocalStorageEntries(event.id, attendees);
 
     user = getUser(event.id)
     users = getAllUsersForEvent(event.id)
@@ -138,13 +134,20 @@
         guests = found.guests ? String(found.guests) : "0";
       }
     }
-    adminFetch(`${API_HOST}/admin/login`, { method: 'POST' }).then(res => {
-      isAdmin = res.ok;
-    }).catch(() => {
+
+    const hasStoredCredentials = !!localStorage.getItem('credentials');
+    if (hasStoredCredentials) {
+      adminFetch(`${API_HOST}/admin/login`, { method: 'POST' }).then(res => {
+        isAdmin = res.ok;
+      }).catch(() => {
+        isAdmin = false;
+      }).finally(() => {
+        startCountdown();
+      });
+    } else {
       isAdmin = false;
-    }).finally(() => {
       startCountdown();
-    });
+    }
 
     // import the web component only in the browser
     import('add-to-calendar-button');
