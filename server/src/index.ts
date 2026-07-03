@@ -4,7 +4,6 @@ import router from "./routes";
 import { errorHandler } from './utils/errorHandler';
 import seed from './db/seed'; // ensure the database is seeded before starting the server
 import cors from 'cors';
-import { rateLimit } from 'express-rate-limit'
 import { requestInfoLogger } from './middlewares/logger';
 
 // Ensure the database is seeded before starting the server
@@ -13,15 +12,6 @@ seed()
 const app = express();
 const port = config.PORT;
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 1000, // Limit each IP to 100 requests per request window
-  standardHeaders: 'draft-8',
-  legacyHeaders: false,
-  ipv6Subnet: 56,
-})
-
-app.use(limiter)
 app.use(cors());
 app.use(express.json());
 app.use(requestInfoLogger);
