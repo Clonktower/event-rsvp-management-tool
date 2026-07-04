@@ -45,7 +45,7 @@ SQLITE_DB_PATH=./data/event_rsvp.db # optional, default is ./data/event_rsvp.db
 
 ## Testing
 
-Run the full test suite (unit + integration):
+Run the unit test suite:
 ```sh
 yarn test
 ```
@@ -55,9 +55,7 @@ Run in watch mode during development:
 yarn test:watch
 ```
 
-Tests run against an in-memory SQLite database and live in `src/__tests__/`:
-- `unit/` — middleware, services, and validators
-- `integration/` — HTTP-level tests of the API (routes + middleware) driven by Supertest
+Tests live in `src/__tests__/unit/` and cover middleware, services, and validators.
 
 ## Notes
 - All admin routes require a Basic Authorization header: `Basic USER:PASS` (credentials from `.env`).
