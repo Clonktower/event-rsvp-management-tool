@@ -43,6 +43,20 @@ SQLITE_DB_PATH=./data/event_rsvp.db # optional, default is ./data/event_rsvp.db
 - `GET    /events/:id` — Get event by ID
 - `POST   /events/:id/rsvp` — RSVP to an event
 
+## Testing
+
+Run the unit test suite:
+```sh
+yarn test
+```
+
+Run in watch mode during development:
+```sh
+yarn test:watch
+```
+
+Tests live in `src/__tests__/unit/` and cover middleware, services, and validators.
+
 ## Notes
 - All admin routes require a Basic Authorization header: `Basic USER:PASS` (credentials from `.env`).
 - Uses SQLite for storage (no external DB required).
