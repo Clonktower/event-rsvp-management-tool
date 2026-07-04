@@ -1,0 +1,70 @@
+name: E2E tests
+
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - 'server/**'
+      - '.github/workflows/e2e.yml'
+
+jobs:
+  e2e:
+    name: Playwright
+    runs-on: ubuntu-latest
+    env:
+      # Force a project-local Yarn cache so the cache steps below are deterministic.
+      YARN_ENABLE_GLOBAL_CACHE: 'false'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # No client/.nvmrc; pin to the same version the rest of the project uses.
+          node-version: '24.7.0'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Restore server Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: server/.yarn/cache
+          key: yarn-e2e-server-${{ runner.os }}-${{ hashFiles('server/yarn.lock') }}
+          restore-keys: |
+            yarn-e2e-server-${{ runner.os }}-
+
+      - name: Restore client Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: client/.yarn/cache
+          key: yarn-e2e-client-${{ runner.os }}-${{ hashFiles('client/yarn.lock') }}
+          restore-keys: |
+            yarn-e2e-client-${{ runner.os }}-
+
+      # The Playwright webServer boots the API server (`yarn dev` in ../server),
+      # so the server's dependencies must be installed as well.
+      - name: Install server dependencies
+        run: yarn install --immutable
+        working-directory: server
+
+      - name: Install client dependencies
+        run: yarn install --immutable
+        working-directory: client
+
+      - name: Cache Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('client/yarn.lock') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browser
+        run: yarn playwright install --with-deps chromium
+        working-directory: client
+
+      - name: Run E2E tests
+        run: yarn test:e2e
+        working-directory: client
