@@ -50,6 +50,6 @@
     "wrangler": "^4.30.0"
   },
   "dependencies": {
-    "add-to-calendar-button": "^2.12.12"
+    "add-to-calendar-button": "^2.15.0"
   }
 }
