@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { createEvent as createEventService, getEventById as getEventByIdService, getAllEvents as getAllEventsService, deleteEvent as deleteEventService, updateEvent as updateEventService } from "../services/event";
 import { getRsvpByEventId } from '../services/rsvp';
 import { getPollByEventId } from '../services/poll';
+import { generateIcs } from '../utils/generateIcs';
 
 export const createEvent = async (req: Request, res: Response, next: Function) => {
   const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt } = req.body;
@@ -34,6 +35,49 @@ export const getEventById = async (req: Request, res: Response, next: Function) 
     const attendees = await getRsvpByEventId(id);
     const poll = getPollByEventId(id);
     res.status(200).json({ event, rsvp: attendees, poll, serverTime: Date.now() });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Serves the event as a real .ics file. iOS Safari 26.6+ ignores the
+// data:text/calendar URL the calendar button builds by default, so the client
+// points its icsFile option here instead.
+export const getEventCalendar = async (req: Request, res: Response, next: Function) => {
+  try {
+    const { id } = req.params;
+
+    const event = await getEventByIdService(id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Rows come back with the database's snake_case column names.
+    const row = event as unknown as {
+      id: string;
+      name: string;
+      date: string;
+      start_time: string;
+      end_time?: string | null;
+      location?: string | null;
+      created_at?: string | null;
+    };
+
+    const ics = generateIcs({
+      id: row.id,
+      name: row.name,
+      date: row.date,
+      startTime: row.start_time,
+      endTime: row.end_time,
+      location: row.location,
+      createdAt: row.created_at,
+    });
+
+    // No Content-Disposition: iOS opens the calendar preview when the file is
+    // served plainly, and an attachment disposition would force a download.
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache");
+    res.status(200).send(ics);
   } catch (err) {
     next(err);
   }
@@ -81,6 +125,7 @@ export const deleteEvent = async (req: Request, res: Response, next: Function) =
 export const eventController = {
   createEvent,
   getEventById,
+  getEventCalendar,
   getAllEvents,
   updateEvent,
   deleteEvent,

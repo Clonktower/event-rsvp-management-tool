@@ -21,6 +21,7 @@ router.delete("/admin/polls/:id", authenticateAdmin, pollController.deletePollCo
 
 // Public routes
 router.get("/events/:id", eventController.getEventById);
+router.get("/events/:id/calendar.ics", eventController.getEventCalendar);
 router.post("/events/:id/rsvp", rsvpController.rsvpToEvent);
 router.patch("/events/:id/rsvp/:rsvpId", rsvpController.updateRsvpByTokenController);
 router.post("/rsvps/my", rsvpController.getMyRsvps);

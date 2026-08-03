@@ -265,6 +265,7 @@
           endTime={event.end_time ?? addOneHour(event.start_time)}
           timeZone="Europe/Berlin"
           location={event.location}
+          icsFile="{API_HOST}/events/{event.id}/calendar.ics"
           options="['Google', 'Apple', 'iCal', 'Microsoft365', 'MicrosoftTeams', 'Outlook.com', 'Yahoo']"
           label="Add to Calendar"
           hideBranding="True"

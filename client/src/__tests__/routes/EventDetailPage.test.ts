@@ -302,6 +302,51 @@ describe('EventDetailPage — multi-user "Editing For" select', () => {
   });
 });
 
+// iOS Safari 26.6+ ignores the data: URL the calendar button builds by default,
+// so the button has to be pointed at the API's .ics endpoint instead.
+describe('EventDetailPage — Add to Calendar', () => {
+  beforeEach(() => stubFetchUnauthorized());
+
+  async function renderCalendarButton(event: Event = baseEvent) {
+    // Built inline rather than via buildData, which widens event to Event | null.
+    const data = { event, rsvp: [] as Rsvp[], poll: null, clockOffset: 0 };
+    const { container } = render(EventDetailPage, { props: { data } });
+    return await waitFor(() => {
+      const button = container.querySelector('add-to-calendar-button');
+      expect(button).not.toBeNull();
+      return button as HTMLElement;
+    });
+  }
+
+  it('points the button at the .ics endpoint for this event', async () => {
+    const button = await renderCalendarButton();
+
+    expect(button.getAttribute('icsFile')).toBe('http://localhost:3000/events/evt-1/calendar.ics');
+  });
+
+  it('offers Apple among the calendar options', async () => {
+    const button = await renderCalendarButton();
+
+    expect(button.getAttribute('options')).toContain('Apple');
+  });
+
+  it('passes the event details through to the button', async () => {
+    const button = await renderCalendarButton();
+
+    expect(button.getAttribute('name')).toBe('Board Game Night');
+    expect(button.getAttribute('startDate')).toBe('2024-06-15');
+    expect(button.getAttribute('startTime')).toBe('19:00');
+    expect(button.getAttribute('endTime')).toBe('22:00');
+    expect(button.getAttribute('location')).toBe('The Pub, Berlin');
+  });
+
+  it('defaults the end time to one hour after the start', async () => {
+    const button = await renderCalendarButton({ ...baseEvent, end_time: undefined });
+
+    expect(button.getAttribute('endTime')).toBe('20:00');
+  });
+});
+
 describe('EventDetailPage — XSS safety', () => {
   beforeEach(() => stubFetchUnauthorized());
 
