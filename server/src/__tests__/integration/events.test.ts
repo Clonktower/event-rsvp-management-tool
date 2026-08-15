@@ -132,6 +132,102 @@ describe('GET /events/:id', () => {
   });
 });
 
+describe('GET /events/:id/calendar.ics', () => {
+  async function createEvent(body: Record<string, unknown> = BASE_BODY) {
+    const res = await request(server)
+      .post('/admin/create-event')
+      .set('Authorization', AUTH)
+      .send(body);
+    return res.body.event.id as string;
+  }
+
+  it('serves the event as a calendar file', async () => {
+    const id = await createEvent();
+
+    const res = await request(server).get(`/events/${id}/calendar.ics`).expect(200);
+
+    expect(res.headers['content-type']).toBe('text/calendar; charset=utf-8');
+    expect(res.text).toContain('BEGIN:VCALENDAR');
+    expect(res.text).toContain('END:VCALENDAR');
+    expect(res.text).toContain('SUMMARY:Test Event');
+    expect(res.text).toContain('LOCATION:Test Venue');
+    expect(res.text).toContain(`UID:${id}`);
+  });
+
+  it('qualifies the times with the event time zone', async () => {
+    const id = await createEvent();
+
+    const res = await request(server).get(`/events/${id}/calendar.ics`).expect(200);
+
+    expect(res.text).toContain('DTSTART;TZID=Europe/Berlin:20251225T180000');
+    expect(res.text).toContain('DTEND;TZID=Europe/Berlin:20251225T220000');
+    expect(res.text).toContain('BEGIN:VTIMEZONE');
+  });
+
+  // iOS opens the calendar preview only when the file is served plainly; an
+  // attachment disposition would turn it into a download instead.
+  it('does not mark the file as an attachment', async () => {
+    const id = await createEvent();
+
+    const res = await request(server).get(`/events/${id}/calendar.ics`).expect(200);
+
+    expect(res.headers['content-disposition']).toBeUndefined();
+    expect(res.headers['cache-control']).toBe('no-cache');
+  });
+
+  it('uses CRLF line endings', async () => {
+    const id = await createEvent();
+
+    const res = await request(server).get(`/events/${id}/calendar.ics`).expect(200);
+
+    expect(res.text).toContain('\r\n');
+    expect(res.text.replace(/\r\n/g, '')).not.toContain('\n');
+  });
+
+  it('reflects an updated event', async () => {
+    const id = await createEvent();
+
+    await request(server)
+      .patch(`/admin/events/${id}`)
+      .set('Authorization', AUTH)
+      .send({ name: 'Renamed Event', startTime: '20:00' })
+      .expect(200);
+
+    const res = await request(server).get(`/events/${id}/calendar.ics`).expect(200);
+
+    expect(res.text).toContain('SUMMARY:Renamed Event');
+    expect(res.text).toContain('DTSTART;TZID=Europe/Berlin:20251225T200000');
+  });
+
+  // Events predating the required endTime validation still have NULL end_time.
+  it('falls back to a one hour event when the row has no end time', async () => {
+    const id = await createEvent();
+    db.prepare('UPDATE events SET end_time = NULL WHERE id = ?').run(id);
+
+    const res = await request(server).get(`/events/${id}/calendar.ics`).expect(200);
+
+    expect(res.text).toContain('DTSTART;TZID=Europe/Berlin:20251225T180000');
+    expect(res.text).toContain('DTEND;TZID=Europe/Berlin:20251225T190000');
+  });
+
+  it('escapes characters that would break the calendar format', async () => {
+    const id = await createEvent({
+      ...BASE_BODY,
+      name: 'Pizza, beer; and games',
+      location: 'Back;room, upstairs',
+    });
+
+    const res = await request(server).get(`/events/${id}/calendar.ics`).expect(200);
+
+    expect(res.text).toContain('SUMMARY:Pizza\\, beer\\; and games');
+    expect(res.text).toContain('LOCATION:Back\\;room\\, upstairs');
+  });
+
+  it('returns 404 for a non-existent event', async () => {
+    await request(server).get('/events/no-such-id/calendar.ics').expect(404);
+  });
+});
+
 describe('GET /events/:id — serverTime', () => {
   it('serverTime is a number close to Date.now()', async () => {
     const created = await request(server)

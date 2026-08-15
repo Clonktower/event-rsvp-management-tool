@@ -2167,12 +2167,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"add-to-calendar-button@npm:^2.12.12":
-  version: 2.12.12
-  resolution: "add-to-calendar-button@npm:2.12.12"
+"add-to-calendar-button@npm:^2.15.0":
+  version: 2.15.0
+  resolution: "add-to-calendar-button@npm:2.15.0"
   dependencies:
-    timezones-ical-library: "npm:^1.10.0"
-  checksum: 10c0/2465bb20aa3ed7cc90086b304d57e77fa764851ba287ecc56fd4b5b651d5e264b3b887b870fde3d16809f35953f11c5a6a65d79d102011d9fb01a28730648388
+    timezones-ical-library: "npm:^2.2.1"
+  checksum: 10c0/8d99cc7c4c8ee6ce115338cc9406dbd18f9ce51ea69d9c2e2c8cb52db606131079076f8f39160bcfc21d6aeac90c596b24ea8de0f19cabb666e05e618ee8b87d
   languageName: node
   linkType: hard
 
@@ -2407,7 +2407,7 @@ __metadata:
     "@testing-library/jest-dom": "npm:^6.9.1"
     "@testing-library/svelte": "npm:^5.3.1"
     "@vitest/coverage-v8": "npm:^4.1.6"
-    add-to-calendar-button: "npm:^2.12.12"
+    add-to-calendar-button: "npm:^2.15.0"
     eslint: "npm:^9.18.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-svelte: "npm:^3.0.0"
@@ -5226,10 +5226,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"timezones-ical-library@npm:^1.10.0":
-  version: 1.10.0
-  resolution: "timezones-ical-library@npm:1.10.0"
-  checksum: 10c0/69938d33dbde178cc2332d64f8645859189804db95de7423f5a54900cbff250f865b4e057b10da1395ddd6fc57c52c91220bf2ee90c1bcf0a31bda803e541888
+"timezones-ical-library@npm:^2.2.1":
+  version: 2.3.1
+  resolution: "timezones-ical-library@npm:2.3.1"
+  checksum: 10c0/6c0c32ea0187fa2c5e343fe76c5aafeb4b73b1a629128b8769eb10ae0562784cb226e2293466b564f6e1df4242655d67c8fad92dabcf07b4ab775f7d7d0e8035
   languageName: node
   linkType: hard
 
