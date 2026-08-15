@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -23,7 +24,7 @@ test.describe('Capacity changes', () => {
     const eventId = (await res.json()).event.id as string;
 
     // User 1 fills the single spot
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.fill('#attendeeName', 'First User');
     await page.click('button[type=submit]:has-text("Submit")');
     await expect(page.getByText('Your response was saved!')).toBeVisible();
@@ -31,7 +32,7 @@ test.describe('Capacity changes', () => {
     // User 2 ends up on waitlist
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
-    await page2.goto(`/events/${eventId}`);
+    await gotoHydrated(page2, `/events/${eventId}`);
     await page2.fill('#attendeeName', 'Second User');
     await page2.click('button[type=submit]:has-text("Submit")');
     await expect(page2.getByText('Your response was saved!')).toBeVisible();
@@ -73,14 +74,14 @@ test.describe('Capacity changes', () => {
     const eventId = (await res.json()).event.id as string;
 
     // Three users all RSVP as going
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.fill('#attendeeName', 'User One');
     await page.click('button[type=submit]:has-text("Submit")');
     await expect(page.getByText('Your response was saved!')).toBeVisible();
 
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
-    await page2.goto(`/events/${eventId}`);
+    await gotoHydrated(page2, `/events/${eventId}`);
     await page2.fill('#attendeeName', 'User Two');
     await page2.click('button[type=submit]:has-text("Submit")');
     await expect(page2.getByText('Your response was saved!')).toBeVisible();
@@ -88,7 +89,7 @@ test.describe('Capacity changes', () => {
 
     const ctx3 = await browser.newContext();
     const page3 = await ctx3.newPage();
-    await page3.goto(`/events/${eventId}`);
+    await gotoHydrated(page3, `/events/${eventId}`);
     await page3.fill('#attendeeName', 'User Three');
     await page3.click('button[type=submit]:has-text("Submit")');
     await expect(page3.getByText('Your response was saved!')).toBeVisible();
@@ -126,7 +127,7 @@ test.describe('Group RSVP attendee list', () => {
     });
     const eventId = (await res.json()).event.id as string;
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     // First RSVP as Alice
     await page.fill('#attendeeName', 'Alice');
@@ -166,7 +167,7 @@ test.describe('Past event grouping', () => {
       },
     });
 
-    await page.goto('/events');
+    await gotoHydrated(page, '/events');
     await expect(page.getByText('Past Events')).toBeVisible();
     await expect(page.getByText('Old Time Event')).toBeVisible();
   });
@@ -174,7 +175,7 @@ test.describe('Past event grouping', () => {
 
 test.describe('404 page', () => {
   test('navigating to a non-existent route shows 404 Not Found', async ({ page }) => {
-    await page.goto('/not-a-page');
+    await gotoHydrated(page, '/not-a-page');
     await expect(page.getByText('404')).toBeVisible();
     await expect(page.getByText('Not Found')).toBeVisible();
   });
@@ -196,7 +197,7 @@ test.describe('XSS smoke test', () => {
 
     const xssName = '<script>window.__xss=1</script>Mallory';
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.fill('#attendeeName', xssName);
     await page.click('button[type=submit]:has-text("Submit")');
     await expect(page.getByText('Your response was saved!')).toBeVisible();

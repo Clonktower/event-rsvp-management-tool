@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -19,19 +20,19 @@ async function createEvent(request: any) {
 
 test.describe('My RSVPs page', () => {
   test('shows empty state when user has no stored RSVPs', async ({ page }) => {
-    await page.goto('/my/rsvps');
+    await gotoHydrated(page, '/my/rsvps');
     await expect(page.getByText("You haven't RSVP'd to any events")).toBeVisible();
   });
 
   test('shows the event after RSVPing to it', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     await page.fill('#attendeeName', 'My RSVPs User');
     await page.click('button[type=submit]:has-text("Submit")');
     await expect(page.getByText('Your response was saved!')).toBeVisible();
 
-    await page.goto('/my/rsvps');
+    await gotoHydrated(page, '/my/rsvps');
     await expect(page.getByText('My RSVPs Test Event')).toBeVisible();
     await expect(page.getByText(/Going/i)).toBeVisible();
   });
@@ -40,7 +41,7 @@ test.describe('My RSVPs page', () => {
     const eventId = await createEvent(request);
 
     // First RSVP
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.fill('#attendeeName', 'Alice');
     await page.click('button[type=submit]:has-text("Submit")');
     await expect(page.getByText('Your response was saved!')).toBeVisible();
@@ -51,7 +52,7 @@ test.describe('My RSVPs page', () => {
     await page.click('button[type=submit]:has-text("Submit")');
     await expect(page.getByText('Your response was saved!')).toBeVisible();
 
-    await page.goto('/my/rsvps');
+    await gotoHydrated(page, '/my/rsvps');
     // Both attendee names should be visible as per-attendee badges
     await expect(page.getByText(/Alice/)).toBeVisible();
     await expect(page.getByText(/Bob/)).toBeVisible();
@@ -59,7 +60,7 @@ test.describe('My RSVPs page', () => {
 
   test('shows empty state after RSVPed event is deleted', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     await page.fill('#attendeeName', 'Stale RSVP User');
     await page.click('button[type=submit]:has-text("Submit")');
@@ -69,7 +70,7 @@ test.describe('My RSVPs page', () => {
       headers: { Authorization: AUTH },
     });
 
-    await page.goto('/my/rsvps');
+    await gotoHydrated(page, '/my/rsvps');
     await expect(page.getByText("You haven't RSVP'd to any events")).toBeVisible();
   });
 
@@ -78,7 +79,7 @@ test.describe('My RSVPs page', () => {
     request,
   }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     await page.fill('#attendeeName', 'Server-Deleted User');
     await page.click('button[type=submit]:has-text("Submit")');
@@ -97,7 +98,7 @@ test.describe('My RSVPs page', () => {
     });
     expect(delRes.ok()).toBeTruthy();
 
-    await page.goto('/my/rsvps');
+    await gotoHydrated(page, '/my/rsvps');
     await expect(page.getByText("You haven't RSVP'd to any events")).toBeVisible();
   });
 });

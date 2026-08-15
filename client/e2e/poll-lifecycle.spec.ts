@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -65,7 +66,7 @@ test.describe('Poll lifecycle', () => {
     });
     expect(closeRes.ok()).toBeTruthy();
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     // Vote checkboxes should be gone (poll is closed)
     await expect(page.locator('input[type="checkbox"]')).toHaveCount(0);
@@ -92,7 +93,7 @@ test.describe('Poll lifecycle', () => {
     });
     expect(reopenRes.ok()).toBeTruthy();
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     // Vote for Chips
     const chipsItem = page.locator('li').filter({ hasText: 'Chips' });
@@ -125,7 +126,7 @@ test.describe('Poll lifecycle', () => {
     );
 
     // Vote for Chips first
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.locator('li').filter({ hasText: 'Chips' }).locator('input[type="checkbox"]').check();
     await page.getByRole('button', { name: 'Save vote' }).click();
     await expect(page.getByText('Vote saved!')).toBeVisible();
@@ -160,7 +161,7 @@ test.describe('Poll lifecycle', () => {
   test('admin deletes poll: widget disappears from event page', async ({ page, request }) => {
     const { eventId, pollId } = await setupEventWithRsvpAndPoll(request);
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await expect(page.getByText('Favourite Snack')).toBeVisible();
 
     const deleteRes = await request.delete(`${API}/admin/polls/${pollId}`, {

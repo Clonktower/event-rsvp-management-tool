@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -21,14 +22,14 @@ async function createEvent(request: any) {
 test.describe('RSVP flow', () => {
   test('displays the event page with name and location', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await expect(page.getByText('E2E Test Event')).toBeVisible();
     await expect(page.getByText('Test Venue, Berlin')).toBeVisible();
   });
 
   test('can submit an RSVP and see confirmation', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     await page.fill('#attendeeName', 'Test User');
     await page.click('button[aria-pressed="false"]:has-text("Going")');
@@ -39,7 +40,7 @@ test.describe('RSVP flow', () => {
 
   test('shows going status after submitting', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     await page.fill('#attendeeName', 'Alice');
     await page.click('button[type=submit]:has-text("Submit")');
@@ -50,7 +51,7 @@ test.describe('RSVP flow', () => {
 
   test('attendee appears in the attendee list after RSVP', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     await page.fill('#attendeeName', 'Visible User');
     await page.click('button[type=submit]:has-text("Submit")');
@@ -67,14 +68,14 @@ test.describe('RSVP flow', () => {
     // event id (the load function returns { event: null }) crashes the render
     // with a 500 instead of showing a friendly "No Such Event was found!"
     // message. The page should null-guard event before reading its fields.
-    const response = await page.goto('/events/no-such-event-id');
+    const response = await gotoHydrated(page, '/events/no-such-event-id');
     expect(response?.status()).toBe(500);
     await expect(page.getByText('No Such Event was found!')).not.toBeVisible();
   });
 
   test('can edit an existing RSVP and change status to Maybe', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     // Initial RSVP as Going (default)
     await page.fill('#attendeeName', 'Edit RSVP User');
@@ -110,7 +111,7 @@ test.describe('RSVP flow', () => {
     const eventId = (await res.json()).event.id as string;
 
     // User 1 fills the single available spot
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.fill('#attendeeName', 'User One');
     await page.click('button[type=submit]:has-text("Submit")');
     await expect(page.getByText('Your response was saved!')).toBeVisible();
@@ -118,7 +119,7 @@ test.describe('RSVP flow', () => {
     // User 2 in a fresh browser context (fresh localStorage, different "device")
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
-    await page2.goto(`/events/${eventId}`);
+    await gotoHydrated(page2, `/events/${eventId}`);
     await page2.fill('#attendeeName', 'User Two');
     await page2.click('button[type=submit]:has-text("Submit")');
     await expect(page2.getByText('Your response was saved!')).toBeVisible();
