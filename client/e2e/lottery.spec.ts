@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -14,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 test.describe('Lottery — create and draw', () => {
   test('admin creates a lottery event via the form, then runs the draw', async ({ page, browser }) => {
     // Create the event through the real form, choosing Lottery mode.
-    await page.goto('/create-event');
+    await gotoHydrated(page, '/create-event');
     await expect(page.getByRole('heading', { name: 'Create Event' })).toBeVisible();
     await page.fill('input[name="name"]', 'Lottery Night');
     await page.fill('input[name="date"]', '2099-06-15');
@@ -39,7 +40,7 @@ test.describe('Lottery — create and draw', () => {
 
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
-    await page2.goto(page.url());
+    await gotoHydrated(page2, page.url());
     await page2.fill('#attendeeName', 'Bob');
     await page2.click('button[type=submit]:has-text("Submit")');
     await expect(page2.getByText('Your response was saved!')).toBeVisible();
@@ -67,14 +68,14 @@ test.describe('Lottery — create and draw', () => {
     const eventId = (await res.json()).event.id as string;
 
     // Two entrants for one seat.
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.fill('#attendeeName', 'Alice');
     await page.click('button[type=submit]:has-text("Submit")');
     await expect(page.getByText('Your response was saved!')).toBeVisible();
 
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
-    await page2.goto(`/events/${eventId}`);
+    await gotoHydrated(page2, `/events/${eventId}`);
     await page2.fill('#attendeeName', 'Bob');
     await page2.click('button[type=submit]:has-text("Submit")');
     await expect(page2.getByText('Your response was saved!')).toBeVisible();
@@ -119,7 +120,7 @@ test.describe('Lottery — create and draw', () => {
     // Visit as a non-admin (fresh context, no credentials).
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     // No "Registration opens in" countdown, and the sign-up actually goes through.
     await expect(page.getByText(/Registration opens in/i)).toHaveCount(0);
@@ -157,7 +158,7 @@ test.describe('Lottery — create and draw', () => {
     // Visit as a non-admin (fresh context, no credentials).
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     // The lottery banner is shown to everyone, but the draw button is admin-only.
     await expect(page.getByText(/lottery event/i)).toBeVisible();
