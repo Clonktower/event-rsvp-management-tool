@@ -5,6 +5,7 @@ import {
   getMyRsvpsService,
   getRsvpByEventId,
   rsvpToEventService,
+  runDrawForEvent,
   updateRsvpByToken,
 } from '../../../services/rsvp';
 import { createEvent, deleteEvent } from '../../../services/event';
@@ -204,6 +205,138 @@ describe('getMyRsvpsService', () => {
   it('ignores pairs that do not exist', async () => {
     const results = await getMyRsvpsService([{ rsvpId: 'ghost', eventId: 'ghost' }]);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('runDrawForEvent', () => {
+  function createLotteryEvent() {
+    return createEvent({ ...BASE_EVENT, selectionMode: 'lottery' }).id;
+  }
+
+  it('assigns a lottery_rank to every going RSVP and records drawn_at on the event', () => {
+    const lotteryId = createLotteryEvent();
+    rsvpToEventService({ id: uuidv4(), eventId: lotteryId, name: 'Alice', status: 'going' });
+    rsvpToEventService({ id: uuidv4(), eventId: lotteryId, name: 'Bob', status: 'going' });
+    rsvpToEventService({ id: uuidv4(), eventId: lotteryId, name: 'Carol', status: 'going' });
+
+    runDrawForEvent(lotteryId);
+
+    const ranks = (getRsvpByEventId(lotteryId) as any[]).map((r) => r.lottery_rank).sort();
+    expect(ranks).toEqual([1, 2, 3]);
+    const event = db.prepare('SELECT drawn_at FROM events WHERE id = ?').get(lotteryId) as any;
+    expect(event.drawn_at).toBeTruthy();
+  });
+
+  it('does not rank non-going RSVPs', () => {
+    const lotteryId = createLotteryEvent();
+    rsvpToEventService({ id: uuidv4(), eventId: lotteryId, name: 'Alice', status: 'going' });
+    rsvpToEventService({ id: uuidv4(), eventId: lotteryId, name: 'Maybe', status: 'maybe' });
+
+    runDrawForEvent(lotteryId);
+
+    const rows = getRsvpByEventId(lotteryId) as any[];
+    const maybeRow = rows.find((r) => r.name === 'Maybe');
+    expect(maybeRow.lottery_rank).toBeNull();
+  });
+
+  it('seeds higher priority_weight to the front of the draw', () => {
+    const lotteryId = createLotteryEvent();
+    // Many zero-weight entrants plus one priority entrant; a priority weight must
+    // always win rank 1 regardless of the random tiebreak among the rest.
+    for (let i = 0; i < 20; i++) {
+      rsvpToEventService({ id: uuidv4(), eventId: lotteryId, name: `Reg${i}`, status: 'going' });
+    }
+    const vipId = uuidv4();
+    rsvpToEventService({ id: vipId, eventId: lotteryId, name: 'Vip', status: 'going', priorityWeight: 1 });
+
+    runDrawForEvent(lotteryId);
+
+    const vip = db.prepare('SELECT lottery_rank FROM rsvp WHERE id = ?').get(vipId) as any;
+    expect(vip.lottery_rank).toBe(1);
+  });
+
+  it('keeps a post-draw maybe→going entrant at the back of the list (null rank)', () => {
+    const lotteryId = createLotteryEvent();
+    const goingId = uuidv4();
+    rsvpToEventService({ id: goingId, eventId: lotteryId, name: 'Alice', status: 'going' });
+    const maybeId = uuidv4();
+    const maybeRsvp = rsvpToEventService({ id: maybeId, eventId: lotteryId, name: 'Bob', status: 'maybe' }) as any;
+
+    runDrawForEvent(lotteryId);
+
+    // Bob was 'maybe' at draw time, so he was never ranked. Flipping to 'going'
+    // afterwards must not jump him ahead of the drawn entrants — he joins the back.
+    updateRsvpByToken({ eventId: lotteryId, rsvpId: maybeId, token: maybeRsvp.token, name: 'Bob', status: 'going', guests: 0 });
+
+    const ordered = getRsvpByEventId(lotteryId) as any[];
+    const bob = ordered.find((r) => r.id === maybeId);
+    expect(bob.status).toBe('going');
+    expect(bob.lottery_rank).toBeNull();
+    expect(ordered[ordered.length - 1].id).toBe(maybeId);
+    expect(ordered[0].id).toBe(goingId);
+  });
+
+  it('forfeits the drawn rank when a going entrant leaves and rejoins (no seat take-backs)', () => {
+    const lotteryId = createLotteryEvent();
+    // Three seats, four entrants: ranks 1-3 are in, rank 4 is waitlisted.
+    db.prepare('UPDATE events SET max_attendees = 3 WHERE id = ?').run(lotteryId);
+    const winners: any[] = [];
+    for (const name of ['A', 'B', 'C', 'D']) {
+      winners.push(rsvpToEventService({ id: uuidv4(), eventId: lotteryId, name, status: 'going' }) as any);
+    }
+    runDrawForEvent(lotteryId);
+
+    const ranked = getRsvpByEventId(lotteryId) as any[];
+    const seatHolder = ranked[2]; // rank 3, the last person inside capacity
+    const waitlisted = ranked[3]; // rank 4, first on the waitlist
+    const seatHolderRow = winners.find((w) => w.id === seatHolder.id);
+
+    // Seat holder steps out...
+    updateRsvpByToken({ eventId: lotteryId, rsvpId: seatHolder.id, token: seatHolderRow.token, name: seatHolder.name, status: 'not_going', guests: 0 });
+    // ...then changes their mind and comes back to going.
+    updateRsvpByToken({ eventId: lotteryId, rsvpId: seatHolder.id, token: seatHolderRow.token, name: seatHolder.name, status: 'going', guests: 0 });
+
+    const after = getRsvpByEventId(lotteryId) as any[];
+    const seatHolderAfter = after.find((r) => r.id === seatHolder.id);
+    const waitlistedAfter = after.find((r) => r.id === waitlisted.id);
+    // The returning entrant lost their rank and is now behind the promoted waitlister.
+    expect(seatHolderAfter.lottery_rank).toBeNull();
+    expect(waitlistedAfter.lottery_rank).toBe(4);
+    expect(after[after.length - 1].id).toBe(seatHolder.id);
+  });
+
+  it('preserves the drawn rank when a going entrant edits without leaving going', () => {
+    const lotteryId = createLotteryEvent();
+    const id = uuidv4();
+    const row = rsvpToEventService({ id, eventId: lotteryId, name: 'Alice', status: 'going' }) as any;
+    runDrawForEvent(lotteryId);
+    const rankBefore = (db.prepare('SELECT lottery_rank FROM rsvp WHERE id = ?').get(id) as any).lottery_rank;
+
+    // Editing guest count while staying 'going' must not demote her.
+    updateRsvpByToken({ eventId: lotteryId, rsvpId: id, token: row.token, name: 'Alice', status: 'going', guests: 2 });
+
+    const rankAfter = (db.prepare('SELECT lottery_rank FROM rsvp WHERE id = ?').get(id) as any).lottery_rank;
+    expect(rankAfter).toBe(rankBefore);
+    expect(rankAfter).not.toBeNull();
+  });
+
+  it('orders a drawn lottery by lottery_rank, with post-draw signups last', () => {
+    const lotteryId = createLotteryEvent();
+    const firstId = uuidv4();
+    const secondId = uuidv4();
+    rsvpToEventService({ id: firstId, eventId: lotteryId, name: 'First', status: 'going' });
+    rsvpToEventService({ id: secondId, eventId: lotteryId, name: 'Second', status: 'going' });
+
+    runDrawForEvent(lotteryId);
+
+    // Someone signs up after the draw — they have no rank and must fall to the back.
+    rsvpToEventService({ id: uuidv4(), eventId: lotteryId, name: 'Latecomer', status: 'going' });
+
+    const ordered = getRsvpByEventId(lotteryId) as any[];
+    expect(ordered[ordered.length - 1].name).toBe('Latecomer');
+    // The first two are the ranked entries, in ascending rank order.
+    expect(ordered[0].lottery_rank).toBe(1);
+    expect(ordered[1].lottery_rank).toBe(2);
   });
 });
 

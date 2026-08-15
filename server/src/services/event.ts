@@ -6,11 +6,11 @@ import { v4 as uuidv4 } from 'uuid';
 export function createEvent(event: Omit<Event, 'id' | 'createdAt'>): Event {
   const id = uuidv4();
   const createdAt = new Date().toISOString();
-  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt } = event;
+  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt, selectionMode } = event;
   db.prepare(`
-    INSERT INTO events (id, name, date, start_time, end_time, max_attendees, location, created_at, registration_opens_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, name, date, startTime, endTime || null, maxAttendees ?? null, location, createdAt, registrationOpensAt ?? null);
+    INSERT INTO events (id, name, date, start_time, end_time, max_attendees, location, created_at, registration_opens_at, selection_mode)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, name, date, startTime, endTime || null, maxAttendees ?? null, location, createdAt, registrationOpensAt ?? null, selectionMode === 'lottery' ? 'lottery' : 'fifo');
   return db.prepare('SELECT * FROM events WHERE id = ?').get(id) as Event;
 }
 
@@ -29,7 +29,7 @@ export function deleteEvent(id: string): boolean {
 export function updateEvent(id: string, updates: Partial<Omit<Event, 'id' | 'createdAt'>>): Event | null {
   const existing = getEventById(id);
   if (!existing) return null;
-  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt } = updates;
+  const { name, date, startTime, endTime, maxAttendees, location, registrationOpensAt, selectionMode } = updates;
   db.prepare(`
     UPDATE events SET
       name = COALESCE(?, name),
@@ -38,7 +38,8 @@ export function updateEvent(id: string, updates: Partial<Omit<Event, 'id' | 'cre
       end_time = COALESCE(?, end_time),
       max_attendees = CASE WHEN ? = 1 THEN ? ELSE max_attendees END,
       location = COALESCE(?, location),
-      registration_opens_at = CASE WHEN ? = 1 THEN ? ELSE registration_opens_at END
+      registration_opens_at = CASE WHEN ? = 1 THEN ? ELSE registration_opens_at END,
+      selection_mode = COALESCE(?, selection_mode)
     WHERE id = ?
   `).run(
     name ?? null,
@@ -50,6 +51,7 @@ export function updateEvent(id: string, updates: Partial<Omit<Event, 'id' | 'cre
     location ?? null,
     registrationOpensAt !== undefined ? 1 : 0,
     registrationOpensAt ?? null,
+    selectionMode === undefined ? null : (selectionMode === 'lottery' ? 'lottery' : 'fifo'),
     id
   );
   return db.prepare('SELECT * FROM events WHERE id = ?').get(id) as Event;

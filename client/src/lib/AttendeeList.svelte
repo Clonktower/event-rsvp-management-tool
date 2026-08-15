@@ -6,6 +6,15 @@
   export let onDelete: (id: string) => void = () => {};
   export let showDeleteButton: boolean = true;
   export let maxAttendees: number = 0;
+  // Before a lottery draw, sign-up order is meaningless, so there is no
+  // "Going vs Waitlist" split — everyone going is an equal entrant in the draw.
+  export let lotteryPredraw: boolean = false;
+  // Priority weight only affects lottery draws, so the "Priority" badge is only
+  // meaningful for lottery events. Admins are stamped a weight on every sign-up
+  // (lottery or FIFO), so without this gate a FIFO admin entry would show it too.
+  export let isLottery: boolean = false;
+
+  $: goingAttendees = attendees.filter((a) => a.status === "going");
 
   const groups = [
     {
@@ -90,21 +99,31 @@
       >
         {#each groups as group (group.key)}
           {#if group.key === "going"}
-            {#if attendees.filter((a) => a.status === "going").length}
-              <li class="bg-gray-100 px-4 py-2 font-semibold dark:bg-gray-800 {group.color}">
+            {#if goingAttendees.length}
+              <li class="bg-gray-100 px-4 py-2 font-semibold dark:bg-gray-800 {lotteryPredraw ? 'text-purple-700 dark:text-purple-300' : group.color}">
                 <div class="flex flex-col items-start">
                   <span class="flex items-center">
-                    <span>{group.label}</span>
-                    <span class="ml-1 flex min-w-8 items-center justify-center text-xs text-gray-500">
-                      ({Math.min(attendees.filter((a) => a.status === "going").length, maxAttendees)})
-                    </span>
+                    {#if lotteryPredraw}
+                      <span>In the draw</span>
+                      <span class="ml-1 flex min-w-8 items-center justify-center text-xs text-gray-500">
+                        ({goingAttendees.length}{maxAttendees ? ` for ${maxAttendees} seat${maxAttendees > 1 ? "s" : ""}` : ""})
+                      </span>
+                    {:else}
+                      <span>{group.label}</span>
+                      <span class="ml-1 flex min-w-8 items-center justify-center text-xs text-gray-500">
+                        ({Math.min(goingAttendees.length, maxAttendees)})
+                      </span>
+                    {/if}
                   </span>
                 </div>
               </li>
-              {#each attendees.filter((a) => a.status === "going").slice(0, maxAttendees) as a (a.id)}
+              {#each (lotteryPredraw ? goingAttendees : goingAttendees.slice(0, maxAttendees)) as a (a.id)}
                 <li class="flex flex-row items-start gap-4 px-4 py-2">
                   <div class="flex min-w-0 flex-row items-center gap-4">
                     <span class="min-w-0 break-words font-medium">{a.name}</span>
+                    {#if isLottery && a.priority_weight && a.priority_weight > 0}
+                      <span class="shrink-0 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" title="Priority spot in the lottery">Priority</span>
+                    {/if}
                     {#if a.guests > 0}
                       <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? "s" : ""})</span>
                     {/if}
@@ -125,21 +144,24 @@
                 </li>
               {/each}
             {/if}
-            {#if attendees.filter((a) => a.status === "going").length > maxAttendees}
+            {#if !lotteryPredraw && goingAttendees.length > maxAttendees}
               <li class="bg-gray-100 px-4 py-2 font-semibold dark:bg-gray-800 text-orange-600 dark:text-orange-400">
                 <div class="flex flex-col items-start">
                   <span class="flex items-center">
                     <span>Waitlist</span>
                     <span class="ml-1 flex min-w-8 items-center justify-center text-xs text-gray-500">
-                      ({attendees.filter((a) => a.status === "going").length - maxAttendees})
+                      ({goingAttendees.length - maxAttendees})
                     </span>
                   </span>
                 </div>
               </li>
-              {#each attendees.filter((a) => a.status === "going").slice(maxAttendees) as a (a.id)}
+              {#each goingAttendees.slice(maxAttendees) as a (a.id)}
                 <li class="flex flex-row items-start gap-4 px-4 py-2">
                   <div class="flex min-w-0 flex-row items-center gap-4">
                     <span class="min-w-0 break-words font-medium">{a.name}</span>
+                    {#if isLottery && a.priority_weight && a.priority_weight > 0}
+                      <span class="shrink-0 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" title="Priority spot in the lottery">Priority</span>
+                    {/if}
                     {#if a.guests > 0}
                       <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? "s" : ""})</span>
                     {/if}
@@ -176,6 +198,9 @@
                 <li class="flex flex-row items-start gap-4 px-4 py-2">
                   <div class="flex min-w-0 flex-row items-center gap-4">
                     <span class="min-w-0 break-words font-medium">{a.name}</span>
+                    {#if isLottery && a.priority_weight && a.priority_weight > 0}
+                      <span class="shrink-0 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" title="Priority spot in the lottery">Priority</span>
+                    {/if}
                     {#if a.guests > 0}
                       <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? "s" : ""})</span>
                     {/if}
@@ -212,6 +237,9 @@
                 <li class="flex flex-row items-start gap-4 px-4 py-2">
                   <div class="flex min-w-0 flex-row items-center gap-4">
                     <span class="min-w-0 break-words font-medium">{a.name}</span>
+                    {#if isLottery && a.priority_weight && a.priority_weight > 0}
+                      <span class="shrink-0 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" title="Priority spot in the lottery">Priority</span>
+                    {/if}
                     {#if a.guests > 0}
                       <span class="text-xs text-gray-400">(+{a.guests} guest{a.guests > 1 ? "s" : ""})</span>
                     {/if}

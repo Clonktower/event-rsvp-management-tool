@@ -58,6 +58,32 @@ describe('AttendeeList', () => {
     expect(screen.getByRole('button', { name: /Hide Responses/ })).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('shows a Priority badge for a lottery attendee with a positive priority_weight', async () => {
+    render(AttendeeList, {
+      props: { attendees: [makeRsvp({ name: 'Alice', priority_weight: 1 })], maxAttendees: 10, isLottery: true },
+    });
+    await fireEvent.click(screen.getByRole('button', { name: /Show Responses/ }));
+    expect(screen.getByText('Priority')).toBeInTheDocument();
+  });
+
+  it('does not show a Priority badge when priority_weight is zero or absent', async () => {
+    render(AttendeeList, {
+      props: { attendees: [makeRsvp({ name: 'Alice', priority_weight: 0 })], maxAttendees: 10, isLottery: true },
+    });
+    await fireEvent.click(screen.getByRole('button', { name: /Show Responses/ }));
+    expect(screen.queryByText('Priority')).not.toBeInTheDocument();
+  });
+
+  it('does not show a Priority badge for a FIFO event even with a positive priority_weight', async () => {
+    // Admins are stamped a priority weight on every sign-up, including FIFO, where
+    // it has no effect — the badge must stay hidden so it does not mislead.
+    render(AttendeeList, {
+      props: { attendees: [makeRsvp({ name: 'Alice', priority_weight: 1 })], maxAttendees: 10, isLottery: false },
+    });
+    await fireEvent.click(screen.getByRole('button', { name: /Show Responses/ }));
+    expect(screen.queryByText('Priority')).not.toBeInTheDocument();
+  });
+
   it('shows Going group header when going attendees are present', async () => {
     render(AttendeeList, {
       props: { attendees: [makeRsvp({ status: 'going' })], maxAttendees: 10 },
@@ -112,6 +138,35 @@ describe('AttendeeList', () => {
     render(AttendeeList, { props: { attendees, maxAttendees: 5 } });
     await fireEvent.click(screen.getByRole('button', { name: /Show Responses/ }));
     expect(screen.queryByText('Waitlist')).not.toBeInTheDocument();
+  });
+
+  describe('lottery (pre-draw)', () => {
+    const overSubscribed = [
+      makeRsvp({ id: 'r1', name: 'Alice', status: 'going' }),
+      makeRsvp({ id: 'r2', name: 'Bob', status: 'going' }),
+      makeRsvp({ id: 'r3', name: 'Charlie', status: 'going' }),
+    ];
+
+    it('does not show a Waitlist even when entrants exceed the seats', async () => {
+      render(AttendeeList, { props: { attendees: overSubscribed, maxAttendees: 2, lotteryPredraw: true } });
+      await fireEvent.click(screen.getByRole('button', { name: /Show Responses/ }));
+      expect(screen.queryByText('Waitlist')).not.toBeInTheDocument();
+    });
+
+    it('lists every entrant (no slicing to capacity) under an "In the draw" header', async () => {
+      render(AttendeeList, { props: { attendees: overSubscribed, maxAttendees: 2, lotteryPredraw: true } });
+      await fireEvent.click(screen.getByRole('button', { name: /Show Responses/ }));
+      expect(screen.getByText('In the draw')).toBeInTheDocument();
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.getByText('Bob')).toBeInTheDocument();
+      expect(screen.getByText('Charlie')).toBeInTheDocument();
+    });
+
+    it('surfaces the entrant count against the seat count', async () => {
+      render(AttendeeList, { props: { attendees: overSubscribed, maxAttendees: 2, lotteryPredraw: true } });
+      await fireEvent.click(screen.getByRole('button', { name: /Show Responses/ }));
+      expect(screen.getByText(/3 for 2 seats/)).toBeInTheDocument();
+    });
   });
 
   it('shows delete buttons when showDeleteButton is true', async () => {
