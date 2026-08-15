@@ -11,6 +11,7 @@ const openPoll: Poll = {
   event_id: 'evt-1',
   title: 'Vote for tonight\'s script',
   status: 'open',
+  max_votes: null,
   created_at: '2024-01-01T00:00:00.000Z',
   options: [
     {
@@ -230,6 +231,55 @@ describe('PollWidget — open poll', () => {
       props: { poll: openPoll, user: undefined, isAdmin: false, eventId: 'evt-1' },
     });
     expect(screen.getByText('A description')).toBeInTheDocument();
+  });
+});
+
+describe('PollWidget — max votes limit', () => {
+  const limitedPoll: Poll = { ...openPoll, max_votes: 1 };
+
+  it('shows a "Select up to N" hint when a limit is set and the user is logged in', () => {
+    render(PollWidget, {
+      props: { poll: limitedPoll, user: loggedInUser, isAdmin: false, eventId: 'evt-1' },
+    });
+    expect(screen.getByText(/Select up to 1 option\./)).toBeInTheDocument();
+  });
+
+  it('does not show the hint when there is no limit', () => {
+    render(PollWidget, {
+      props: { poll: openPoll, user: loggedInUser, isAdmin: false, eventId: 'evt-1' },
+    });
+    expect(screen.queryByText(/Select up to/)).not.toBeInTheDocument();
+  });
+
+  it('disables unselected checkboxes once the limit is reached', async () => {
+    // limitedPoll allows 1 vote; opt-2 is already selected (rsvp-x voted for it).
+    render(PollWidget, {
+      props: { poll: limitedPoll, user: loggedInUser, isAdmin: false, eventId: 'evt-1' },
+    });
+    const [cbA, cbB] = screen.getAllByRole('checkbox');
+    expect(cbB).toBeChecked();
+    // At the limit, the unselected option is disabled and cannot be added.
+    expect(cbA).toBeDisabled();
+  });
+
+  it('reflects the selected count in the hint and frees up slots when deselecting', async () => {
+    render(PollWidget, {
+      props: { poll: limitedPoll, user: loggedInUser, isAdmin: false, eventId: 'evt-1' },
+    });
+    expect(screen.getByText(/\(1 selected\)/)).toBeInTheDocument();
+    const [cbA, cbB] = screen.getAllByRole('checkbox');
+    // Deselect opt-2, which should re-enable opt-1.
+    await fireEvent.change(cbB);
+    expect(screen.getByText(/\(0 selected\)/)).toBeInTheDocument();
+    expect(cbA).not.toBeDisabled();
+  });
+
+  it('pre-fills the max votes field in the edit form', async () => {
+    render(PollWidget, {
+      props: { poll: limitedPoll, user: undefined, isAdmin: true, eventId: 'evt-1' },
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.getByLabelText('Max votes per person')).toHaveValue(1);
   });
 });
 
