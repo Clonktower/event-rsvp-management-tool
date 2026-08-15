@@ -47,4 +47,7 @@ yarn test:watch    # watch mode
 yarn test:coverage # with coverage
 ```
 
-Tests live in `src/__tests__/`.
+Tests live in `src/__tests__/`:
+- `utils/` — unit tests for the utility functions
+- `components/` and `routes/` — component and page tests rendered with
+  [@testing-library/svelte](https://testing-library.com/docs/svelte-testing-library/intro/)
