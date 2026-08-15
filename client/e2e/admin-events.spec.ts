@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -27,7 +28,7 @@ test.describe('Admin — events list', () => {
   });
 
   test('shows unauthorized message when not logged in', async ({ page }) => {
-    await page.goto('/events');
+    await gotoHydrated(page, '/events');
     await expect(page.getByText(/unauthorized/i)).toBeVisible();
   });
 
@@ -36,7 +37,7 @@ test.describe('Admin — events list', () => {
     await page.addInitScript(() => {
       localStorage.setItem('credentials', 'e2eadmin:e2epass');
     });
-    await page.goto('/events');
+    await gotoHydrated(page, '/events');
     await expect(page.getByText('Admin Events Test Event')).toBeVisible();
   });
 
@@ -46,7 +47,7 @@ test.describe('Admin — events list', () => {
       localStorage.setItem('credentials', 'e2eadmin:e2epass');
     });
     page.on('dialog', (dialog) => dialog.accept());
-    await page.goto('/events');
+    await gotoHydrated(page, '/events');
     await expect(page.getByText('Admin Events Test Event')).toBeVisible();
 
     await page.getByRole('button', { name: 'Delete event' }).first().click();
@@ -63,7 +64,7 @@ test.describe('Admin — edit event', () => {
 
   test('can edit an event name', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}/edit`);
+    await gotoHydrated(page, `/events/${eventId}/edit`);
     await expect(page.getByRole('heading', { name: 'Edit Event' })).toBeVisible();
     await page.locator('#name').fill('Updated Event Name');
     await page.click('button[type=submit]');
@@ -74,7 +75,7 @@ test.describe('Admin — edit event', () => {
 
 test.describe('Admin — auth guard', () => {
   test('navigating to /create-event without credentials shows unauthorized state', async ({ page }) => {
-    await page.goto('/create-event');
+    await gotoHydrated(page, '/create-event');
     await expect(page.getByText(/not authorized/i)).toBeVisible();
   });
 });

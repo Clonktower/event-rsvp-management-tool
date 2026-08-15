@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -25,7 +26,7 @@ async function createEvent(request: APIRequestContext) {
 test.describe('Add to Calendar', () => {
   test('advertises an .ics URL for the event', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     const button = page.locator('add-to-calendar-button');
     await expect(button).toHaveAttribute('icsFile', `${API}/events/${eventId}/calendar.ics`);
@@ -33,7 +34,7 @@ test.describe('Add to Calendar', () => {
 
   test('the advertised URL serves a calendar file for the event', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     const icsUrl = await page.locator('add-to-calendar-button').getAttribute('icsFile');
     expect(icsUrl).toBeTruthy();
@@ -52,7 +53,7 @@ test.describe('Add to Calendar', () => {
 
   test('choosing Apple hands a calendar file to the browser', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     // The button renders into a shadow root; Playwright's CSS engine pierces it.
     await page.locator('add-to-calendar-button').getByText('Add to Calendar').click();

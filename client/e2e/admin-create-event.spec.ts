@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 // Log in before each admin test by presetting localStorage credentials
 test.beforeEach(async ({ page }) => {
@@ -11,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Admin — create event', () => {
   test('creates an event via the form and shows the event link', async ({ page }) => {
-    await page.goto('/create-event');
+    await gotoHydrated(page, '/create-event');
 
     // Wait for the auth check to complete before filling the form
     await expect(page.getByRole('heading', { name: 'Create Event' })).toBeVisible();
@@ -30,7 +31,7 @@ test.describe('Admin — create event', () => {
   });
 
   test('shows an error when required fields are missing', async ({ page }) => {
-    await page.goto('/create-event');
+    await gotoHydrated(page, '/create-event');
     await expect(page.getByRole('heading', { name: 'Create Event' })).toBeVisible();
 
     // Submit with only name filled in — JS validation fires an alert and returns early

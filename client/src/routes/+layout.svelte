@@ -6,10 +6,18 @@
 
   let { children } = $props();
 
-  import { setContext } from 'svelte';
+  import { onMount, setContext } from 'svelte';
 
   let menuOpen = $state(false);
   setContext('setMenuOpen', (isOpen: boolean) => menuOpen = isOpen);
+
+  onMount(() => {
+    // Marks the point where the client app has taken over from the SSR'd markup.
+    // The E2E suite waits on this before interacting: forms here submit via
+    // on:submit|preventDefault, so a click landing before hydration falls through
+    // to a native GET submit instead of the handler. See e2e/helpers.ts.
+    document.body.dataset.hydrated = 'true';
+  });
 </script>
 
 <svelte:head>

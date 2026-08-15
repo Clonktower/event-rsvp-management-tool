@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -33,7 +34,7 @@ test.describe('Admin — delete attendee', () => {
     });
     expect(rsvpRes.ok()).toBeTruthy();
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.getByRole('button', { name: /Show Responses/i }).click();
     await expect(page.getByText('Deletable Alice')).toBeVisible();
 
@@ -53,7 +54,7 @@ test.describe('Admin — delete attendee', () => {
       data: { name: 'Delete Me', status: 'going' },
     });
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
     await page.getByRole('button', { name: /Show Responses/i }).click();
     await expect(page.getByText('Delete Me')).toBeVisible();
     await expect(page.getByText('Keep Me')).toBeVisible();

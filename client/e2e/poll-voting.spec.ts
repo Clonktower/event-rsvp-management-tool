@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -42,7 +43,7 @@ test.describe('Poll voting', () => {
       { eventId, rsvpId, token }
     );
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     const optionA = page.locator('li').filter({ hasText: 'Script A' });
     const optionB = page.locator('li').filter({ hasText: 'Script B' });
