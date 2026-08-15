@@ -47,6 +47,23 @@ function stubFetchUnauthorized() {
   );
 }
 
+// Intl.DurationFormat is not available in every jsdom version; return a fixed
+// duration so the countdown renders deterministically. Call the result to restore.
+function stubDurationFormat() {
+  const OrigIntl = globalThis.Intl;
+  (globalThis as any).Intl = {
+    ...OrigIntl,
+    DurationFormat: class {
+      format() {
+        return '1:00:00';
+      }
+    },
+  };
+  return () => {
+    (globalThis as any).Intl = OrigIntl;
+  };
+}
+
 describe('EventDetailPage — happy path', () => {
   beforeEach(() => stubFetchUnauthorized());
 
@@ -404,5 +421,84 @@ describe('EventDetailPage — registration opens in future', () => {
     });
 
     (globalThis as any).Intl = OrigIntl;
+  });
+
+  it('does not flash the countdown box before the countdown has a value', async () => {
+    const futureDate = new Date(Date.now() + 3_600_000).toISOString();
+    const event: Event = { ...baseEvent, registration_opens_at: futureDate };
+    const restoreIntl = stubDurationFormat();
+    stubFetchUnauthorized();
+
+    render(EventDetailPage, { props: { data: buildData(event) } });
+
+    // On the very first paint the countdown has not been computed yet. The box
+    // must stay hidden rather than render "Registration opens in" with a blank
+    // value, which is the flicker this guards against.
+    expect(screen.queryByText(/Registration opens in/)).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Registration opens in/)).toBeInTheDocument();
+    });
+
+    restoreIntl();
+  });
+
+  it('never renders the countdown box with an empty value', async () => {
+    const futureDate = new Date(Date.now() + 3_600_000).toISOString();
+    const event: Event = { ...baseEvent, registration_opens_at: futureDate };
+    const restoreIntl = stubDurationFormat();
+    stubFetchUnauthorized();
+
+    const { container } = render(EventDetailPage, { props: { data: buildData(event) } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Registration opens in/)).toBeInTheDocument();
+    });
+
+    // Whenever the box is on screen its <span class="font-mono"> must hold a
+    // real duration, never the empty string the component starts out with.
+    const values = [...container.querySelectorAll('span.font-mono')].map(s => s.textContent);
+    expect(values.length).toBeGreaterThan(0);
+    values.forEach(v => expect(v?.trim()).not.toBe(''));
+
+    restoreIntl();
+  });
+
+  it('shows no countdown box at all when registration is already open', async () => {
+    // registration_opens_at absent => countdown is irrelevant and must never appear.
+    stubFetchUnauthorized();
+
+    render(EventDetailPage, { props: { data: buildData(baseEvent) } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Board Game Night')).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Registration opens in/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Public registration opens in/)).not.toBeInTheDocument();
+  });
+
+  it('shows the admin public-registration countdown with a real value', async () => {
+    // Admins get early access, so they see the event plus a separate box counting
+    // down to public registration. Nothing else covers that second box.
+    // Note this is not a flicker test: isAdmin is false until the async login
+    // check resolves, by which point the countdown is already computed, so the
+    // admin box could not flash even before the countdownReady guard existed.
+    const futureDate = new Date(Date.now() + 3_600_000).toISOString();
+    const event: Event = { ...baseEvent, registration_opens_at: futureDate };
+    const restoreIntl = stubDurationFormat();
+    // ok:true makes the admin login check succeed, so isAdmin becomes true.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) } as Response),
+    );
+
+    render(EventDetailPage, { props: { data: buildData(event) } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Public registration opens in/)).toBeInTheDocument();
+    });
+    expect(screen.getByText('1:00:00')).toBeInTheDocument();
+
+    restoreIntl();
   });
 });
