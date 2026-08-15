@@ -35,16 +35,8 @@ function buildData(
 }
 
 function stubFetchUnauthorized() {
-  // removeStaleLocalStorageEntries returns early when localStorage is empty.
-  // The only fetch that fires is the admin login check; return 401 so isAdmin=false.
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: async () => ({}),
-    } as Response),
-  );
+  // No credentials in localStorage → admin login probe is skipped entirely.
+  vi.stubGlobal('fetch', vi.fn());
 }
 
 // Intl.DurationFormat is not available in every jsdom version; return a fixed
@@ -204,6 +196,7 @@ describe('EventDetailPage — waitlist', () => {
 
 describe('EventDetailPage — admin view', () => {
   it('shows admin edit link when user is admin', async () => {
+    localStorage.setItem('credentials', 'admin:secret');
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -267,8 +260,8 @@ describe('EventDetailPage — +1 button', () => {
     ];
     render(EventDetailPage, { props: { data: buildData(baseEvent, rsvps) } });
     await screen.findByRole('button', { name: /Bringing a \+1/ });
-    // Drain onMount's promise chain (fetch → attendeeName = 'Alice') before clicking,
-    // matching real-world timing where onMount completes before any user interaction.
+    // Drain onMount before clicking, matching real-world timing where onMount
+    // completes before any user interaction.
     await new Promise(resolve => setTimeout(resolve, 0));
     await fireEvent.click(screen.getByRole('button', { name: /Bringing a \+1/ }));
     expect(screen.getByPlaceholderText('Enter your name')).toHaveValue('');
@@ -389,6 +382,51 @@ describe('EventDetailPage — XSS safety', () => {
   });
 });
 
+describe('EventDetailPage — server call reduction', () => {
+  it('does not fire the admin login probe when no credentials are stored', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    render(EventDetailPage, { props: { data: buildData() } });
+    // Drain onMount's synchronous body and any microtasks.
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('fires the admin login probe exactly once when credentials are stored', async () => {
+    localStorage.setItem('credentials', 'admin:secret');
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({}),
+    } as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    render(EventDetailPage, { props: { data: buildData() } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(String(fetchSpy.mock.calls[0][0])).toContain('/admin/login');
+  });
+
+  it('prunes stale localStorage RSVP entries absent from the loaded attendees', async () => {
+    // 'stale' is not in the loaded attendees, so it should be pruned; 'r1' stays.
+    localStorage.setItem(
+      'my_events',
+      JSON.stringify({ 'evt-1': { 'r1': 'tok1', 'stale': 'tok2' } }),
+    );
+    const rsvps: Rsvp[] = [
+      { id: 'r1', name: 'Alice', event_id: 'evt-1', status: 'going', guests: 0, token: 'tok1' },
+    ];
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    render(EventDetailPage, { props: { data: buildData(baseEvent, rsvps) } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const stored = JSON.parse(localStorage.getItem('my_events') ?? '{}');
+    expect(stored['evt-1']).toHaveProperty('r1');
+    expect(stored['evt-1']).not.toHaveProperty('stale');
+    // Pruning must rely on the already-loaded attendees, not a fresh fetch.
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
 describe('EventDetailPage — registration opens in future', () => {
   it('shows a countdown when registration is not yet open', async () => {
     const futureDate = new Date(Date.now() + 3_600_000).toISOString();
@@ -405,14 +443,7 @@ describe('EventDetailPage — registration opens in future', () => {
       },
     };
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: false,
-        status: 401,
-        json: async () => ({}),
-      } as Response),
-    );
+    vi.stubGlobal('fetch', vi.fn());
 
     render(EventDetailPage, { props: { data: buildData(event) } });
 
@@ -427,13 +458,20 @@ describe('EventDetailPage — registration opens in future', () => {
     const futureDate = new Date(Date.now() + 3_600_000).toISOString();
     const event: Event = { ...baseEvent, registration_opens_at: futureDate };
     const restoreIntl = stubDurationFormat();
-    stubFetchUnauthorized();
+    // Credentials stored, so the admin probe runs and startCountdown is deferred
+    // to its .finally(). That deferral is the window where the box could render
+    // blank; without credentials the countdown is computed synchronously during
+    // mount and there is no window to test.
+    localStorage.setItem('credentials', 'admin:secret');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) } as Response),
+    );
 
     render(EventDetailPage, { props: { data: buildData(event) } });
 
-    // On the very first paint the countdown has not been computed yet. The box
-    // must stay hidden rather than render "Registration opens in" with a blank
-    // value, which is the flicker this guards against.
+    // The countdown has not been computed yet. The box must stay hidden rather
+    // than render "Registration opens in" with a blank value.
     expect(screen.queryByText(/Registration opens in/)).not.toBeInTheDocument();
 
     await waitFor(() => {
@@ -486,7 +524,9 @@ describe('EventDetailPage — registration opens in future', () => {
     const futureDate = new Date(Date.now() + 3_600_000).toISOString();
     const event: Event = { ...baseEvent, registration_opens_at: futureDate };
     const restoreIntl = stubDurationFormat();
-    // ok:true makes the admin login check succeed, so isAdmin becomes true.
+    // The admin probe only fires when credentials are stored; ok:true then makes
+    // it succeed, so isAdmin becomes true.
+    localStorage.setItem('credentials', 'admin:secret');
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) } as Response),
