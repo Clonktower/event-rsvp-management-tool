@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
@@ -51,7 +52,7 @@ test.describe('Poll vote limit', () => {
       { eventId, rsvpId, token }
     );
 
-    await page.goto(`/events/${eventId}`);
+    await gotoHydrated(page, `/events/${eventId}`);
 
     // Hint reflects the limit and starts at zero selected.
     await expect(page.getByText('Select up to 2 options. (0 selected)')).toBeVisible();
