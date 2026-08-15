@@ -458,13 +458,20 @@ describe('EventDetailPage — registration opens in future', () => {
     const futureDate = new Date(Date.now() + 3_600_000).toISOString();
     const event: Event = { ...baseEvent, registration_opens_at: futureDate };
     const restoreIntl = stubDurationFormat();
-    stubFetchUnauthorized();
+    // Credentials stored, so the admin probe runs and startCountdown is deferred
+    // to its .finally(). That deferral is the window where the box could render
+    // blank; without credentials the countdown is computed synchronously during
+    // mount and there is no window to test.
+    localStorage.setItem('credentials', 'admin:secret');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) } as Response),
+    );
 
     render(EventDetailPage, { props: { data: buildData(event) } });
 
-    // On the very first paint the countdown has not been computed yet. The box
-    // must stay hidden rather than render "Registration opens in" with a blank
-    // value, which is the flicker this guards against.
+    // The countdown has not been computed yet. The box must stay hidden rather
+    // than render "Registration opens in" with a blank value.
     expect(screen.queryByText(/Registration opens in/)).not.toBeInTheDocument();
 
     await waitFor(() => {
@@ -517,7 +524,9 @@ describe('EventDetailPage — registration opens in future', () => {
     const futureDate = new Date(Date.now() + 3_600_000).toISOString();
     const event: Event = { ...baseEvent, registration_opens_at: futureDate };
     const restoreIntl = stubDurationFormat();
-    // ok:true makes the admin login check succeed, so isAdmin becomes true.
+    // The admin probe only fires when credentials are stored; ok:true then makes
+    // it succeed, so isAdmin becomes true.
+    localStorage.setItem('credentials', 'admin:secret');
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) } as Response),
