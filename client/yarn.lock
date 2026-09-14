@@ -1070,6 +1070,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@lit-labs/ssr-dom-shim@npm:^1.5.0":
+  version: 1.6.0
+  resolution: "@lit-labs/ssr-dom-shim@npm:1.6.0"
+  checksum: 10c0/deffcfd765d268820beef600a1c1cf9d3cf1a5cb4bbe7e80843796ff33d1a122f4e5651ef4a44b33d36e5fa6538e6ee87a95b9d40b4a26cabf3c35b45194c87a
+  languageName: node
+  linkType: hard
+
+"@lit/reactive-element@npm:^2.1.0":
+  version: 2.1.2
+  resolution: "@lit/reactive-element@npm:2.1.2"
+  dependencies:
+    "@lit-labs/ssr-dom-shim": "npm:^1.5.0"
+  checksum: 10c0/557069ce6ebbbafb1140e1e0a25ce73d3501bf455cda231d42bb131baa9065c54b6b7ca1655507eede397decd7ddde16c84192cb72a07d4edf41d54e07725933
+  languageName: node
+  linkType: hard
+
 "@napi-rs/wasm-runtime@npm:^0.2.12":
   version: 0.2.12
   resolution: "@napi-rs/wasm-runtime@npm:0.2.12"
@@ -1883,6 +1899,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/trusted-types@npm:^2.0.2":
+  version: 2.0.7
+  resolution: "@types/trusted-types@npm:2.0.7"
+  checksum: 10c0/4c4855f10de7c6c135e0d32ce462419d8abbbc33713b31d294596c0cc34ae1fa6112a2f9da729c8f7a20707782b0d69da3b1f8df6645b0366d08825ca1522e0c
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/eslint-plugin@npm:8.39.1":
   version: 8.39.1
   resolution: "@typescript-eslint/eslint-plugin@npm:8.39.1"
@@ -2167,12 +2190,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"add-to-calendar-button@npm:^2.15.0":
-  version: 2.15.0
-  resolution: "add-to-calendar-button@npm:2.15.0"
+"add-to-calendar-button@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "add-to-calendar-button@npm:3.0.3"
   dependencies:
-    timezones-ical-library: "npm:^2.2.1"
-  checksum: 10c0/8d99cc7c4c8ee6ce115338cc9406dbd18f9ce51ea69d9c2e2c8cb52db606131079076f8f39160bcfc21d6aeac90c596b24ea8de0f19cabb666e05e618ee8b87d
+    lit: "npm:^3.3.3"
+    timezones-ical-library: "npm:^2.3.2"
+  checksum: 10c0/931d01085abf6a510030e0cd957a28677b6c04fca5bdc92fcddf0dde3c757951512152b3aa1410cfc702d29548387e074caf3ee9db887cf13ec921a34f8f400f
   languageName: node
   linkType: hard
 
@@ -2407,7 +2431,7 @@ __metadata:
     "@testing-library/jest-dom": "npm:^6.9.1"
     "@testing-library/svelte": "npm:^5.3.1"
     "@vitest/coverage-v8": "npm:^4.1.6"
-    add-to-calendar-button: "npm:^2.15.0"
+    add-to-calendar-button: "npm:^3.0.3"
     eslint: "npm:^9.18.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-svelte: "npm:^3.0.0"
@@ -3879,6 +3903,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lit-element@npm:^4.2.0":
+  version: 4.2.2
+  resolution: "lit-element@npm:4.2.2"
+  dependencies:
+    "@lit-labs/ssr-dom-shim": "npm:^1.5.0"
+    "@lit/reactive-element": "npm:^2.1.0"
+    lit-html: "npm:^3.3.0"
+  checksum: 10c0/114ab5837f1f9e03a30b1ed1c055fa0e31f01e444464e5ab0453ef88be12d778508235533267c42614d323e3048ee58f865b5c612948a53bd6219abca404c710
+  languageName: node
+  linkType: hard
+
+"lit-html@npm:^3.3.0":
+  version: 3.3.3
+  resolution: "lit-html@npm:3.3.3"
+  dependencies:
+    "@types/trusted-types": "npm:^2.0.2"
+  checksum: 10c0/84e57314412ff385cc67fc482d26b77057370e2cfe3c6495cc45f692bdad840d5ed0519ddddcfae1d043bb098c66daa7e807593d5a21ac72094da14274497879
+  languageName: node
+  linkType: hard
+
+"lit@npm:^3.3.3":
+  version: 3.3.3
+  resolution: "lit@npm:3.3.3"
+  dependencies:
+    "@lit/reactive-element": "npm:^2.1.0"
+    lit-element: "npm:^4.2.0"
+    lit-html: "npm:^3.3.0"
+  checksum: 10c0/11b6175ebffce92f4cf835ddd8a198d49707c27f34b0a7c538d2cb294f6c2fb7ff40aabd3589fcf0c2ed162404faaf2bb7c966fad9024bb9e02d013e2d5aa0b5
+  languageName: node
+  linkType: hard
+
 "locate-character@npm:^3.0.0":
   version: 3.0.0
   resolution: "locate-character@npm:3.0.0"
@@ -5226,10 +5281,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"timezones-ical-library@npm:^2.2.1":
-  version: 2.3.1
-  resolution: "timezones-ical-library@npm:2.3.1"
-  checksum: 10c0/6c0c32ea0187fa2c5e343fe76c5aafeb4b73b1a629128b8769eb10ae0562784cb226e2293466b564f6e1df4242655d67c8fad92dabcf07b4ab775f7d7d0e8035
+"timezones-ical-library@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "timezones-ical-library@npm:2.3.2"
+  checksum: 10c0/fed0bca485877749f5f251436fbc1d9e9f81009b5969397154a051c4b06abd61ce7b31d7f4c60ff0ed4c8ad8e639ece95922540a9c702c9e46415bca6c63a54d
   languageName: node
   linkType: hard
 
