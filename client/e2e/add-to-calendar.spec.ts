@@ -1,8 +1,15 @@
-import { expect, test, type APIRequestContext } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { gotoHydrated } from './helpers';
 
 const API = 'http://localhost:3000';
 const AUTH = 'Basic e2eadmin:e2epass';
+
+const SAFARI_IPHONE =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1';
+// iPad Safari requests desktop sites by default, so it identifies as a Mac.
+const SAFARI_IPAD =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Safari/605.1.15';
 
 async function createEvent(request: APIRequestContext) {
   const res = await request.post(`${API}/admin/create-event`, {
@@ -19,53 +26,58 @@ async function createEvent(request: APIRequestContext) {
   return body.event.id as string;
 }
 
-// The calendar button used to build a data: URL in the browser, which iOS
-// Safari 26.6+ silently refuses. It now points at the API's .ics endpoint, so
-// what matters end to end is that the advertised URL exists and serves a
-// calendar file the browser will hand to a calendar app.
+async function openCalendarOptions(page: Page, eventId: string) {
+  await gotoHydrated(page, `/events/${eventId}`);
+  // The button renders into a shadow root; Playwright's CSS engine pierces it.
+  await page.locator('add-to-calendar-button').getByText('Add to Calendar').click();
+  const appleOption = page.locator('[id$="-apple"]');
+  await expect(appleOption).toBeVisible();
+  return appleOption;
+}
+
 test.describe('Add to Calendar', () => {
-  test('advertises an .ics URL for the event', async ({ page, request }) => {
+  test('choosing Apple downloads a calendar file for the event', async ({ page, request }) => {
     const eventId = await createEvent(request);
-    await gotoHydrated(page, `/events/${eventId}`);
-
-    const button = page.locator('add-to-calendar-button');
-    await expect(button).toHaveAttribute('icsFile', `${API}/events/${eventId}/calendar.ics`);
-  });
-
-  test('the advertised URL serves a calendar file for the event', async ({ page, request }) => {
-    const eventId = await createEvent(request);
-    await gotoHydrated(page, `/events/${eventId}`);
-
-    const icsUrl = await page.locator('add-to-calendar-button').getAttribute('icsFile');
-    expect(icsUrl).toBeTruthy();
-
-    const res = await request.get(icsUrl as string);
-    expect(res.status()).toBe(200);
-    expect(res.headers()['content-type']).toBe('text/calendar; charset=utf-8');
-
-    const body = await res.text();
-    expect(body).toContain('BEGIN:VCALENDAR');
-    expect(body).toContain('SUMMARY:E2E Calendar Event');
-    expect(body).toContain('LOCATION:Test Venue\\, Berlin');
-    expect(body).toContain('DTSTART;TZID=Europe/Berlin:20991225T180000');
-    expect(body).toContain('DTEND;TZID=Europe/Berlin:20991225T220000');
-  });
-
-  test('choosing Apple hands a calendar file to the browser', async ({ page, request }) => {
-    const eventId = await createEvent(request);
-    await gotoHydrated(page, `/events/${eventId}`);
-
-    // The button renders into a shadow root; Playwright's CSS engine pierces it.
-    await page.locator('add-to-calendar-button').getByText('Add to Calendar').click();
-
-    const appleOption = page.locator('[id$="-apple"]');
-    await expect(appleOption).toBeVisible();
+    const appleOption = await openCalendarOptions(page, eventId);
 
     const downloadPromise = page.waitForEvent('download');
     await appleOption.click();
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/\.ics$/);
-    expect(download.url()).toBe(`${API}/events/${eventId}/calendar.ics`);
+    const ics = await readFile(await download.path(), 'utf8');
+    expect(ics).toContain('BEGIN:VCALENDAR');
+    expect(ics).toContain(`UID:${eventId}`);
+    expect(ics).toContain('SUMMARY:E2E Calendar Event');
+    expect(ics).toContain('DTSTART;TZID=Europe/Berlin:20991225T180000');
+    expect(ics).toContain('DTEND;TZID=Europe/Berlin:20991225T220000');
+    expect(ics).toContain('LOCATION:Test Venue\\, Berlin');
+  });
+
+  // iOS Safari refuses data: URL downloads, so on iPhone and iPad the Apple option
+  // has to be a blob: link.
+  test.describe('on iPhone', () => {
+    test.use({ userAgent: SAFARI_IPHONE, hasTouch: true, isMobile: true, viewport: { width: 393, height: 852 } });
+
+    test('the Apple option is a blob: link', async ({ page, request }) => {
+      const eventId = await createEvent(request);
+      const appleOption = await openCalendarOptions(page, eventId);
+
+      await expect(appleOption).toHaveAttribute('href', /^blob:/);
+    });
+  });
+
+  test.describe('on iPad', () => {
+    test.use({ userAgent: SAFARI_IPAD, hasTouch: true, viewport: { width: 820, height: 1180 } });
+
+    test('the Apple option is a blob: link', async ({ page, request }) => {
+      await page.addInitScript(() => {
+        Object.defineProperty(Navigator.prototype, 'maxTouchPoints', { get: () => 5 });
+      });
+      const eventId = await createEvent(request);
+      const appleOption = await openCalendarOptions(page, eventId);
+
+      await expect(appleOption).toHaveAttribute('href', /^blob:/);
+    });
   });
 });

@@ -265,18 +265,18 @@
       {/if}
       {#if mounted}
         <add-to-calendar-button
-          lightMode="system"
+          light-mode="system"
           name={event.name}
-          startDate={event.date}
-          startTime={event.start_time}
-          endTime={event.end_time ?? addOneHour(event.start_time)}
-          timeZone="Europe/Berlin"
+          uid={event.id}
+          start-date={event.date}
+          start-time={event.start_time}
+          end-time={event.end_time ?? addOneHour(event.start_time)}
+          time-zone="Europe/Berlin"
           location={event.location}
-          icsFile="{API_HOST}/events/{event.id}/calendar.ics"
-          options="['Google', 'Apple', 'iCal', 'Microsoft365', 'MicrosoftTeams', 'Outlook.com', 'Yahoo']"
+          options="['google', 'apple', 'ical', 'ms365', 'msteams', 'outlookcom', 'yahoo']"
           label="Add to Calendar"
-          hideBranding="True"
-          style="--btn-background: #2563eb; --btn-text: #fff; --btn-hover-background: #1d4ed8; --btn-font-weight: 600; --btn-border-radius: 0.5rem; --btn-padding: 0.5rem 1rem; --btn-font-size: 1rem; --btn-box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08); --btn-transition: background 0.2s; --btn-dark-background: #1e293b; --btn-dark-text: #fff; --btn-dark-hover-background: #334155; width: auto; min-width: 0; display: inline-block;"
+          hide-branding
+          style="--btn-background: #2563eb; --btn-hover-background: #1d4ed8; --btn-border: #2563eb; --btn-hover-border: #1d4ed8; --btn-text: #fff; --btn-hover-text: #fff; --btn-font-weight: 600; --btn-border-radius: 0.5rem; width: auto; min-width: 0; display: inline-block;"
           size="2"
         >
         </add-to-calendar-button>

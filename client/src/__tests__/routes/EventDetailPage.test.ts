@@ -312,8 +312,6 @@ describe('EventDetailPage — multi-user "Editing For" select', () => {
   });
 });
 
-// iOS Safari 26.6+ ignores the data: URL the calendar button builds by default,
-// so the button has to be pointed at the API's .ics endpoint instead.
 describe('EventDetailPage — Add to Calendar', () => {
   beforeEach(() => stubFetchUnauthorized());
 
@@ -328,32 +326,40 @@ describe('EventDetailPage — Add to Calendar', () => {
     });
   }
 
-  it('points the button at the .ics endpoint for this event', async () => {
-    const button = await renderCalendarButton();
-
-    expect(button.getAttribute('icsFile')).toBe('http://localhost:3000/events/evt-1/calendar.ics');
-  });
-
-  it('offers Apple among the calendar options', async () => {
-    const button = await renderCalendarButton();
-
-    expect(button.getAttribute('options')).toContain('Apple');
-  });
-
   it('passes the event details through to the button', async () => {
     const button = await renderCalendarButton();
 
     expect(button.getAttribute('name')).toBe('Board Game Night');
-    expect(button.getAttribute('startDate')).toBe('2024-06-15');
-    expect(button.getAttribute('startTime')).toBe('19:00');
-    expect(button.getAttribute('endTime')).toBe('22:00');
+    expect(button.getAttribute('start-date')).toBe('2024-06-15');
+    expect(button.getAttribute('start-time')).toBe('19:00');
+    expect(button.getAttribute('end-time')).toBe('22:00');
+    expect(button.getAttribute('time-zone')).toBe('Europe/Berlin');
     expect(button.getAttribute('location')).toBe('The Pub, Berlin');
   });
 
   it('defaults the end time to one hour after the start', async () => {
     const button = await renderCalendarButton({ ...baseEvent, end_time: undefined });
 
-    expect(button.getAttribute('endTime')).toBe('20:00');
+    expect(button.getAttribute('end-time')).toBe('20:00');
+  });
+
+  it('identifies the calendar entry by the event id', async () => {
+    const button = await renderCalendarButton();
+
+    expect(button.getAttribute('uid')).toBe('evt-1');
+  });
+
+  it('offers Apple among the calendar options', async () => {
+    const button = await renderCalendarButton();
+
+    expect(button.getAttribute('options')).toContain("'apple'");
+  });
+
+  it('lets the button generate the calendar file itself', async () => {
+    const button = await renderCalendarButton();
+
+    expect(button.hasAttribute('ics-file')).toBe(false);
+    expect(button.hasAttribute('icsfile')).toBe(false);
   });
 });
 
