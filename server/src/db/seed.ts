@@ -21,6 +21,34 @@ function migrationAddRegistrationOpensAtToEvents() {
   }
 }
 
+// Migration: Add lottery columns to events if missing
+function migrationAddLotteryColumnsToEvents() {
+  type PragmaColumn = { name: string };
+  const pragma = db.prepare("PRAGMA table_info(events);").all() as PragmaColumn[];
+  if (!pragma.some(col => col.name === 'selection_mode')) {
+    db.prepare("ALTER TABLE events ADD COLUMN selection_mode TEXT NOT NULL DEFAULT 'fifo';").run();
+    console.log("Added 'selection_mode' column to events table.");
+  }
+  if (!pragma.some(col => col.name === 'drawn_at')) {
+    db.prepare("ALTER TABLE events ADD COLUMN drawn_at TEXT;").run();
+    console.log("Added 'drawn_at' column to events table.");
+  }
+}
+
+// Migration: Add lottery columns to rsvp if missing
+function migrationAddLotteryColumnsToRsvp() {
+  type PragmaColumn = { name: string };
+  const pragma = db.prepare("PRAGMA table_info(rsvp);").all() as PragmaColumn[];
+  if (!pragma.some(col => col.name === 'priority_weight')) {
+    db.prepare("ALTER TABLE rsvp ADD COLUMN priority_weight REAL NOT NULL DEFAULT 0;").run();
+    console.log("Added 'priority_weight' column to rsvp table.");
+  }
+  if (!pragma.some(col => col.name === 'lottery_rank')) {
+    db.prepare("ALTER TABLE rsvp ADD COLUMN lottery_rank INTEGER;").run();
+    console.log("Added 'lottery_rank' column to rsvp table.");
+  }
+}
+
 // Seeds the SQLite database with required tables
 export default function seed() {
   try {
@@ -34,7 +62,9 @@ export default function seed() {
         end_time TEXT,
         max_attendees INTEGER,
         location TEXT NOT NULL,
-        created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+        created_at DATETIME NOT NULL DEFAULT (datetime('now')),
+        selection_mode TEXT NOT NULL DEFAULT 'fifo',
+        drawn_at TEXT
       );
     `).run();
 
@@ -49,6 +79,8 @@ export default function seed() {
         created_at DATETIME NOT NULL DEFAULT (datetime('now')),
         updated_at DATETIME NOT NULL DEFAULT (datetime('now')),
         token TEXT NOT NULL DEFAULT 'legacy',
+        priority_weight REAL NOT NULL DEFAULT 0,
+        lottery_rank INTEGER,
         UNIQUE(event_id, id),
         FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
       );
@@ -56,6 +88,8 @@ export default function seed() {
 
     migrationAddTokenColumnToRsvp();
     migrationAddRegistrationOpensAtToEvents();
+    migrationAddLotteryColumnsToEvents();
+    migrationAddLotteryColumnsToRsvp();
 
     // Create polls table
     db.prepare(`

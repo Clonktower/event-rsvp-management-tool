@@ -9,4 +9,6 @@ export type Rsvp = {
   created_at?: string;
   updated_at?: string;
   token: string;
+  priority_weight?: number;
+  lottery_rank?: number | null;
 };

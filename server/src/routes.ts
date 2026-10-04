@@ -13,6 +13,7 @@ router.get("/admin/events", authenticateAdmin, eventController.getAllEvents);
 router.patch("/admin/events/:id", authenticateAdmin, eventController.updateEvent);
 router.delete("/admin/events/:id", authenticateAdmin, eventController.deleteEvent);
 router.delete("/admin/events/rsvp/:id", authenticateAdmin, rsvpController.deleteRsvp);
+router.post("/admin/events/:id/draw", authenticateAdmin, rsvpController.drawLottery);
 router.post("/admin/events/:id/poll", authenticateAdmin, pollController.createPollController);
 router.patch("/admin/polls/:id/close", authenticateAdmin, pollController.closePollController);
 router.patch("/admin/polls/:id/reopen", authenticateAdmin, pollController.reopenPollController);

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { deleteRsvpById, rsvpToEventService, updateRsvpByToken } from "../services/rsvp";
+import { deleteRsvpById, rsvpToEventService, updateRsvpByToken, runDrawForEvent, ADMIN_PRIORITY_WEIGHT } from "../services/rsvp";
 import { getEventById as getEventByIdService } from "../services/event";
 import { isValidStatus } from "../validators/isValidStatus";
 import { getMyRsvpsService } from '../services/rsvp';
@@ -23,9 +23,15 @@ export const rsvpToEvent = async (req: Request, res: Response, next: Function) =
       return res.status(404).json({ error: "Event not found." });
     }
 
+    const isAdmin = isAdminRequest(req);
+
+    // In lottery mode the draw is the gate, so there is no registration-opening
+    // rush to enforce; sign-ups stay open through the entry window. The FIFO path
+    // keeps the existing registrationOpensAt gate.
+    const isLottery = (event as any).selection_mode === 'lottery';
     const registrationOpensAt = (event as any).registration_opens_at as string | null;
-    if (registrationOpensAt && Date.now() < new Date(registrationOpensAt).getTime() - 1000) {
-      if (!isAdminRequest(req)) {
+    if (!isLottery && registrationOpensAt && Date.now() < new Date(registrationOpensAt).getTime() - 1000) {
+      if (!isAdmin) {
         return res.status(403).json({ error: "Registration not yet open.", registrationOpensAt });
       }
     }
@@ -34,7 +40,8 @@ export const rsvpToEvent = async (req: Request, res: Response, next: Function) =
       attendeeId = require('uuid').v4();
     }
 
-    const rsvp = await rsvpToEventService({ id: attendeeId, eventId, name, status, guests });
+    const priorityWeight = isAdmin ? ADMIN_PRIORITY_WEIGHT : 0;
+    const rsvp = await rsvpToEventService({ id: attendeeId, eventId, name, status, guests, priorityWeight });
     res.status(201).json({ message: "RSVP recorded!", rsvp });
   } catch (err) {
     next(err);
@@ -78,6 +85,31 @@ export const updateRsvpByTokenController = async (req: Request, res: Response, n
   }
 };
 
+// Admin-triggered lottery draw. Assigns a position to every 'going' RSVP. Only
+// valid for lottery events, and guarded against re-running once a draw has
+// happened (so attendees who already saw they were in are not reshuffled).
+export const drawLottery = async (req: Request, res: Response, next: Function) => {
+  try {
+    const { id: eventId } = req.params;
+
+    const event = await getEventByIdService(eventId);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found." });
+    }
+    if ((event as any).selection_mode !== 'lottery') {
+      return res.status(400).json({ error: "Event is not in lottery mode." });
+    }
+    if ((event as any).drawn_at) {
+      return res.status(409).json({ error: "Lottery has already been drawn for this event." });
+    }
+
+    const drawnAt = runDrawForEvent(eventId);
+    res.status(200).json({ message: "Lottery drawn!", drawnAt });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getMyRsvps = async (req: Request, res: Response, next: Function) => {
   try {
     const pairs = req.body.myRsvps;
@@ -97,5 +129,6 @@ export const rsvpController = {
   rsvpToEvent,
   deleteRsvp,
   updateRsvpByTokenController,
+  drawLottery,
   getMyRsvps
 };

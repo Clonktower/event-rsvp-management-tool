@@ -8,5 +8,7 @@ export type Event = {
   location: string;
   createdAt?: string; // ISO date string (YYYY-MM-DDTHH:mm:ss.sssZ)
   registrationOpensAt?: string; // ISO UTC datetime — when public registration opens
+  selectionMode?: 'fifo' | 'lottery'; // how seats are allocated; defaults to 'fifo'
+  drawnAt?: string; // ISO UTC datetime — when the lottery draw was run (lottery mode only)
 };
 

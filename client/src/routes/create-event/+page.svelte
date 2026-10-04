@@ -10,6 +10,7 @@
   let startTime = "";
   let endTime = "";
   let registrationOpensAtLocal = "";
+  let selectionMode: "fifo" | "lottery" = "fifo";
   let loading = false;
   let createdEventId: string | null = null;
   let authError = false;
@@ -45,7 +46,7 @@
     }
     loading = true;
     try {
-      const body: Record<string, unknown> = { name, date, startTime, endTime, maxAttendees, location };
+      const body: Record<string, unknown> = { name, date, startTime, endTime, maxAttendees, location, selectionMode };
       if (registrationOpensAtLocal) {
         body.registrationOpensAt = new Date(registrationOpensAtLocal).toISOString();
       }
@@ -66,6 +67,7 @@
         maxAttendees = "";
         location = "";
         registrationOpensAtLocal = "";
+        selectionMode = "fifo";
         // Optionally, you could also focus the first input
       } else {
         alert(data.error || "Failed to create event.");
@@ -173,6 +175,25 @@
         />
       </div>
       <div>
+        <label for="selectionMode" class="mb-1 block font-semibold">Seat Allocation</label>
+        <select
+          id="selectionMode"
+          name="selectionMode"
+          bind:value={selectionMode}
+          class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
+        >
+          <option value="fifo">First come, first served</option>
+          <option value="lottery">Lottery (random draw)</option>
+        </select>
+        <p class="mt-1 text-xs text-gray-500">
+          {#if selectionMode === "lottery"}
+            Sign-ups stay open with no rush; you run a random draw from the admin controls when the entry window closes. Admins get a priority spot.
+          {:else}
+            Seats fill in the order people sign up.
+          {/if}
+        </p>
+      </div>
+      <div>
         <label for="registrationOpensAt" class="mb-1 block font-semibold">Registration Opens At</label>
         <input
           id="registrationOpensAt"
@@ -181,7 +202,13 @@
           bind:value={registrationOpensAtLocal}
           class="w-full rounded border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-700 dark:bg-background-dark dark:text-text-dark"
         />
-        <p class="mt-1 text-xs text-gray-500">Leave empty to open registration immediately. Admins can always register early.</p>
+        <p class="mt-1 text-xs text-gray-500">
+          {#if selectionMode === "lottery"}
+            Optional. When the entry window opens. In lottery mode this does not gate sign-ups — the draw decides who gets in.
+          {:else}
+            Leave empty to open registration immediately. Admins can always register early.
+          {/if}
+        </p>
       </div>
       <div>
         <label for="maxAttendees" class="mb-1 block font-semibold"

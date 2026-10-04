@@ -6,6 +6,8 @@ export type Rsvp = {
   created_at?: string; // ISO date string
   updated_at?: string; // ISO date string
   guests?: number;
-  token: string
+  token: string;
+  priority_weight?: number; // higher = seeded earlier in a lottery draw (admins > 0)
+  lottery_rank?: number | null; // assigned position after a draw; null until drawn
 }
 
