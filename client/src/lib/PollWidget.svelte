@@ -21,6 +21,7 @@
   // Admin create form state
   let showCreateForm = false;
   let newTitle = '';
+  let newMaxVotes: number | null = null;
   let newOptions: { name: string; url: string; description: string }[] = [
     { name: '', url: '', description: '' },
   ];
@@ -30,9 +31,20 @@
   // Admin edit form state
   let showEditForm = false;
   let editTitle = '';
+  let editMaxVotes: number | null = null;
   let editOptions: { id?: string; name: string; url: string; description: string }[] = [];
   let editLoading = false;
   let editError = '';
+
+  // Number of options a voter may select (null = no limit).
+  $: voteLimit = currentPoll?.max_votes ?? null;
+
+  // Normalizes a max-votes form field into a payload value. A number input binds to a
+  // number (or null when empty); an empty string is also treated as "no limit" (null).
+  function normalizeMaxVotes(raw: number | string | null | undefined): number | null {
+    if (raw === null || raw === undefined || raw === '') return null;
+    return Number(raw);
+  }
 
   // Initialize selections from server state when poll or user changes
   function initSelectedOptions(p: Poll | null, u: User | undefined) {
@@ -53,6 +65,8 @@
     if (next.has(optId)) {
       next.delete(optId);
     } else {
+      // Enforce the per-voter limit client-side; the server enforces it too.
+      if (voteLimit != null && next.size >= voteLimit) return;
       next.add(optId);
     }
     selectedOptionIds = next;
@@ -110,6 +124,7 @@
   function enterEditMode() {
     if (!currentPoll) return;
     editTitle = currentPoll.title;
+    editMaxVotes = currentPoll.max_votes;
     editOptions = currentPoll.options.map(o => ({
       id: o.id,
       name: o.name,
@@ -134,13 +149,18 @@
       editError = 'A title and at least one option with name and URL are required.';
       return;
     }
+    const maxVotes = normalizeMaxVotes(editMaxVotes);
+    if (maxVotes != null && (!Number.isInteger(maxVotes) || maxVotes < 1)) {
+      editError = 'Max votes must be a whole number of at least 1, or left blank for no limit.';
+      return;
+    }
     editLoading = true;
     editError = '';
     try {
       const res = await adminFetch(`${API_HOST}/admin/polls/${currentPoll!.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: editTitle, options: validOptions }),
+        body: JSON.stringify({ title: editTitle, options: validOptions, maxVotes }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -173,13 +193,18 @@
       createError = 'A title and at least one option with name and URL are required.';
       return;
     }
+    const maxVotes = normalizeMaxVotes(newMaxVotes);
+    if (maxVotes != null && (!Number.isInteger(maxVotes) || maxVotes < 1)) {
+      createError = 'Max votes must be a whole number of at least 1, or left blank for no limit.';
+      return;
+    }
     createLoading = true;
     createError = '';
     try {
       const res = await adminFetch(`${API_HOST}/admin/events/${eventId}/poll`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newTitle, options: validOptions }),
+        body: JSON.stringify({ title: newTitle, options: validOptions, maxVotes }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -188,6 +213,7 @@
         currentPoll = data.poll;
         showCreateForm = false;
         newTitle = '';
+        newMaxVotes = null;
         newOptions = [{ name: '', url: '', description: '' }];
       }
     } catch {
@@ -227,6 +253,19 @@
               type="text"
               bind:value={newTitle}
               placeholder="e.g. Vote for tonight's scripts"
+              class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="new-poll-max-votes">Max votes per person</label>
+            <input
+              id="new-poll-max-votes"
+              type="number"
+              min="1"
+              step="1"
+              bind:value={newMaxVotes}
+              placeholder="Leave blank for no limit"
               class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -363,6 +402,19 @@
         />
       </div>
 
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="edit-poll-max-votes">Max votes per person</label>
+        <input
+          id="edit-poll-max-votes"
+          type="number"
+          min="1"
+          step="1"
+          bind:value={editMaxVotes}
+          placeholder="Leave blank for no limit"
+          class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
       <div class="mb-3 space-y-2">
         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Options</p>
         {#each editOptions as opt, i}
@@ -481,6 +533,10 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
           RSVP first to participate in the vote.
         </p>
+      {:else if voteLimit != null}
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          Select up to {voteLimit} option{voteLimit !== 1 ? 's' : ''}. ({selectedOptionIds.size} selected)
+        </p>
       {/if}
 
       <ul class="space-y-2">
@@ -490,10 +546,12 @@
             {user ? 'hover:border-primary transition-colors' : ''}
             {isSelected ? 'border-primary bg-blue-50 dark:bg-blue-900/20' : ''}">
             {#if user}
-              <label class="flex items-start gap-3 cursor-pointer">
+              {@const isDisabled = !isSelected && voteLimit != null && selectedOptionIds.size >= voteLimit}
+              <label class="flex items-start gap-3 {isDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}">
                 <input
                   type="checkbox"
                   checked={isSelected}
+                  disabled={isDisabled}
                   on:change={() => toggleOption(opt.id)}
                   class="mt-1 accent-primary shrink-0"
                 />

@@ -8,6 +8,7 @@ import {
   getPollByEventId,
   reopenPoll,
   updatePoll,
+  VoteLimitError,
 } from '../../../services/poll';
 import { createEvent } from '../../../services/event';
 import { rsvpToEventService } from '../../../services/rsvp';
@@ -78,6 +79,16 @@ describe('createPoll', () => {
       { name: 'A', url: 'https://a.example.com', description: 'Nice place' },
     ]);
     expect(poll.options[0].description).toBe('Nice place');
+  });
+
+  it('defaults max_votes to null (no limit)', () => {
+    const poll = createPoll(eventId, 'When?', TWO_OPTIONS);
+    expect(poll.max_votes).toBeNull();
+  });
+
+  it('stores an optional max_votes limit', () => {
+    const poll = createPoll(eventId, 'When?', TWO_OPTIONS, 1);
+    expect(poll.max_votes).toBe(1);
   });
 
   it('does NOT prevent a second poll for the same event (BUG: duplicate polls)', () => {
@@ -164,6 +175,20 @@ describe('updatePoll', () => {
   it('returns null for an unknown poll id', () => {
     expect(updatePoll('ghost', 'Title', [{ name: 'x', url: 'x' }])).toBeNull();
   });
+
+  it('updates the max_votes limit', () => {
+    const poll = createPoll(eventId, 'Where?', TWO_OPTIONS, 1);
+    const existing = poll.options.map((o) => ({ id: o.id, name: o.name, url: o.url }));
+    const updated = updatePoll(poll.id, 'Where?', existing, 2)!;
+    expect(updated.max_votes).toBe(2);
+  });
+
+  it('clears the max_votes limit when omitted', () => {
+    const poll = createPoll(eventId, 'Where?', TWO_OPTIONS, 1);
+    const existing = poll.options.map((o) => ({ id: o.id, name: o.name, url: o.url }));
+    const updated = updatePoll(poll.id, 'Where?', existing)!;
+    expect(updated.max_votes).toBeNull();
+  });
 });
 
 describe('deletePoll', () => {
@@ -234,5 +259,30 @@ describe('castVotes', () => {
     const otherPoll = createPoll(otherEventId, 'Other', TWO_OPTIONS);
     const poll = createPoll(eventId, 'Vote', TWO_OPTIONS);
     expect(castVotes(poll.id, rsvpId, rsvpToken, [otherPoll.options[0].id])).toBeNull();
+  });
+
+  it('allows voting up to the max_votes limit', () => {
+    const poll = createPoll(eventId, 'Vote', TWO_OPTIONS, 1);
+    const result = castVotes(poll.id, rsvpId, rsvpToken, [poll.options[0].id])!;
+    expect(result.options[0].votes).toHaveLength(1);
+  });
+
+  it('throws VoteLimitError when more options than max_votes are selected', () => {
+    const poll = createPoll(eventId, 'Vote', TWO_OPTIONS, 1);
+    expect(() =>
+      castVotes(poll.id, rsvpId, rsvpToken, [poll.options[0].id, poll.options[1].id]),
+    ).toThrow(VoteLimitError);
+  });
+
+  it('does not record any votes when the limit is exceeded', () => {
+    const poll = createPoll(eventId, 'Vote', TWO_OPTIONS, 1);
+    try {
+      castVotes(poll.id, rsvpId, rsvpToken, [poll.options[0].id, poll.options[1].id]);
+    } catch {
+      // expected
+    }
+    const after = getPollByEventId(eventId)!;
+    expect(after.options[0].votes).toHaveLength(0);
+    expect(after.options[1].votes).toHaveLength(0);
   });
 });

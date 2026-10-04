@@ -2,9 +2,17 @@ import db from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import { Poll, PollOption } from '../types/Poll';
 
-type RawPoll = { id: string; event_id: string; title: string; status: string; created_at: string };
+type RawPoll = { id: string; event_id: string; title: string; status: string; max_votes: number | null; created_at: string };
 type RawOption = { id: string; poll_id: string; name: string; url: string; description: string | null; created_at: string };
 type RawVote = { rsvp_id: string; voter_name: string };
+
+// Thrown by castVotes when a voter selects more options than the poll's max_votes allows.
+export class VoteLimitError extends Error {
+  constructor(public readonly maxVotes: number) {
+    super(`You can vote for at most ${maxVotes} option${maxVotes === 1 ? '' : 's'}.`);
+    this.name = 'VoteLimitError';
+  }
+}
 
 function buildPoll(raw: RawPoll): Poll {
   const options = db.prepare(
@@ -25,7 +33,12 @@ function buildPoll(raw: RawPoll): Poll {
     optionsWithVotes.sort((a, b) => b.votes.length - a.votes.length);
   }
 
-  return { ...raw, status: raw.status as 'open' | 'closed', options: optionsWithVotes };
+  return {
+    ...raw,
+    status: raw.status as 'open' | 'closed',
+    max_votes: raw.max_votes ?? null,
+    options: optionsWithVotes,
+  };
 }
 
 export function getPollByEventId(eventId: string): Poll | null {
@@ -37,15 +50,16 @@ export function getPollByEventId(eventId: string): Poll | null {
 export function createPoll(
   eventId: string,
   title: string,
-  options: { name: string; url: string; description?: string }[]
+  options: { name: string; url: string; description?: string }[],
+  maxVotes: number | null = null
 ): Poll {
   const pollId = uuidv4();
   const now = new Date().toISOString();
 
   const run = db.transaction(() => {
     db.prepare(
-      `INSERT INTO polls (id, event_id, title, status, created_at) VALUES (?, ?, ?, 'open', ?)`
-    ).run(pollId, eventId, title, now);
+      `INSERT INTO polls (id, event_id, title, status, max_votes, created_at) VALUES (?, ?, ?, 'open', ?, ?)`
+    ).run(pollId, eventId, title, maxVotes, now);
 
     for (const opt of options) {
       db.prepare(
@@ -73,7 +87,8 @@ export function reopenPoll(pollId: string): Poll | null {
 export function updatePoll(
   pollId: string,
   title: string,
-  options: { id?: string; name: string; url: string; description?: string }[]
+  options: { id?: string; name: string; url: string; description?: string }[],
+  maxVotes: number | null = null
 ): Poll | null {
   const poll = db.prepare('SELECT * FROM polls WHERE id = ?').get(pollId) as RawPoll | undefined;
   if (!poll) return null;
@@ -81,7 +96,7 @@ export function updatePoll(
   const now = new Date().toISOString();
 
   const run = db.transaction(() => {
-    db.prepare('UPDATE polls SET title = ? WHERE id = ?').run(title, pollId);
+    db.prepare('UPDATE polls SET title = ?, max_votes = ? WHERE id = ?').run(title, maxVotes, pollId);
 
     const currentOptions = db.prepare('SELECT id FROM poll_options WHERE poll_id = ?').all(pollId) as { id: string }[];
     const currentIds = new Set(currentOptions.map(o => o.id));
@@ -128,6 +143,10 @@ export function castVotes(
   const allOptions = db.prepare('SELECT id FROM poll_options WHERE poll_id = ?').all(pollId) as { id: string }[];
   const validIds = new Set(allOptions.map(o => o.id));
   if (!optionIds.every(id => validIds.has(id))) return null;
+
+  if (poll.max_votes != null && optionIds.length > poll.max_votes) {
+    throw new VoteLimitError(poll.max_votes);
+  }
 
   const allOptionIds = allOptions.map(o => o.id);
   const now = new Date().toISOString();
