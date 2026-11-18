@@ -6,6 +6,7 @@
   export let onSubmit: (e: Event) => void;
   export let onNameInput: (e: Event) => void;
   export let disabled = false;
+  export let submitting = false;
 
   let rsvpOptions: { value: RsvpStatus; label: string }[] = [
     { value: "going", label: "Going" },
@@ -29,6 +30,7 @@
       placeholder="Enter your name"
       required
       aria-required="true"
+      readonly={submitting}
       bind:value={attendeeName}
       on:input={onNameInput}
     />
@@ -40,13 +42,14 @@
       {#each rsvpOptions as opt (opt.value)}
         <button
           type="button"
-          class="px-4 py-2 focus:underline focus:z-10 text-sm font-semibold transition-colors
+          class="px-4 py-2 focus:underline focus:z-10 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60
             {rsvp === opt.value && opt.value === 'going' ? 'bg-green-800 text-white' : ''}
             {rsvp === opt.value && opt.value === 'maybe' ? 'bg-yellow-800 text-white' : ''}
             {rsvp === opt.value && opt.value === 'not_going' ? 'bg-red-800 text-white' : ''}
             {rsvp !== opt.value ? 'bg-transparent text-gray-700 dark:text-gray-200' : ''}
             {opt.value !== 'not_going' ? 'border-r border-gray-300 dark:border-gray-700' : ''}"
           aria-pressed={rsvp === opt.value}
+          disabled={submitting}
           on:click={() => { rsvp = opt.value; }}
         >
           {opt.label}
@@ -57,8 +60,9 @@
 
   <button
     type="submit"
-    {disabled}
+    disabled={disabled || submitting}
+    aria-busy={submitting}
     class="self-start rounded bg-primary px-6 py-2 font-bold text-white shadow transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-gray-400"
-    >Submit</button
+    >{submitting ? "Saving…" : "Submit"}</button
   >
 </form>

@@ -45,6 +45,12 @@
   let attendeeName = "";
   let guests = "0";
   let showToast = false;
+  let submitting = false;
+  let submitError = '';
+  // Set when a new RSVP may or may not have been created. Submitting stays
+  // locked until the visitor reloads and can see for themselves, or switches
+  // to one of their stored responses, which makes the next submit an edit.
+  let submitUnconfirmed = false;
   let showDeleteToast = false;
   let deleteError = '';
   let { hasResponded, status } = hasUserResponded(event.id, attendees)
@@ -158,9 +164,35 @@
     mounted = true;
   });
 
-  async function handleRsvpSubmit() {
+  const SUBMIT_FAILED = 'Your response could not be saved. Please try again.';
+  const SUBMIT_UNCONFIRMED =
+    "We couldn't confirm that your response was saved. Reload the page and check the list of responses before trying again.";
+
+  function clearSubmitError() {
+    submitError = '';
+    submitUnconfirmed = false;
+  }
+
+  async function submitErrorFrom(res: Response) {
     try {
-      if (!attendeeName.trim()) return;
+      const body = await res.json();
+      if (typeof body?.error === 'string' && body.error) return body.error;
+    } catch {
+      // No JSON body: fall through to the generic message.
+    }
+    return SUBMIT_FAILED;
+  }
+
+  async function handleRsvpSubmit() {
+    // One request at a time. Without this, every extra tap on Submit while the
+    // first request is still in flight creates another RSVP: the stored token
+    // that turns a submit into an edit only exists once the first one returns.
+    if (submitting || submitUnconfirmed) return;
+    if (!attendeeName.trim()) return;
+
+    submitting = true;
+    submitError = '';
+    try {
       const body: RSVPRequestBody = {
         name: attendeeName,
         status: rsvp,
@@ -175,37 +207,77 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          submitError = await submitErrorFrom(res);
+          return;
+        }
       } else {
+        // Creating is not safe to repeat. Unless the server itself turned the
+        // request down (a 4xx, which it sends before saving anything), the RSVP
+        // may already exist while this device holds no token for it: the request
+        // failed without an answer, a proxy answered 5xx after the server had
+        // saved, the answer cannot be read, or the token cannot be stored. A
+        // second try would then add a duplicate, so keep Submit locked and send
+        // the visitor to check instead. (Editing, above, can be retried freely.)
         const rsvpFetch = isAdminEarlyAccess ? adminFetch : fetch;
-        const response = await rsvpFetch(`${API_HOST}/events/${event.id}/rsvp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+        let created: Rsvp | undefined;
+        try {
+          const response = await rsvpFetch(`${API_HOST}/events/${event.id}/rsvp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
 
-        if (!response.ok) return;
+          if (response.status >= 400 && response.status < 500) {
+            submitError = await submitErrorFrom(response);
+            return;
+          }
 
-        const data = await response.json();
-        if (data.rsvp) {
-          addNewRsvp(data.rsvp);
-          user = getUser(event.id);
+          if (response.ok) {
+            created = (await response.json())?.rsvp;
+            if (created) {
+              addNewRsvp(created);
+              user = getUser(event.id);
+            }
+          }
+        } catch (err) {
+          console.error(err);
+          created = undefined;
+        }
+
+        if (!created) {
+          submitError = SUBMIT_UNCONFIRMED;
+          submitUnconfirmed = true;
+          return;
         }
       }
 
-      // Refetch event and attendee list
-      const refetchRes = await fetch(`${API_HOST}/events/${event.id}`);
-      if (refetchRes.ok) {
-        const refetchData = await refetchRes.json();
-        attendees = refetchData.rsvp;
+      // Refetch the attendee list. The response is already saved at this point,
+      // so a failure here must not look like a failed submit: that would leave
+      // the form open and invite another try.
+      try {
+        const refetchRes = await fetch(`${API_HOST}/events/${event.id}`);
+        if (refetchRes.ok) {
+          const refetchData = await refetchRes.json();
+          attendees = refetchData.rsvp;
+        }
+      } catch (err) {
+        console.error(err);
       }
 
+      // Defensive: the controls are locked while saving, so the form cannot
+      // differ from what was sent. Taking the status from the request keeps the
+      // confirmation true even if that lock is ever loosened.
+      rsvp = body.status;
+      status = body.status;
       isFormVisible = false;
-      status = rsvp;
       showToast = true;
       setTimeout(() => (showToast = false), 2000);
     } catch (err) {
-      console.error(err)
+      console.error(err);
+      submitError = SUBMIT_FAILED;
+    } finally {
+      submitting = false;
     }
   }
 
@@ -337,8 +409,10 @@
         <label for="user-select" class="block mb-1 font-semibold text-gray-700 dark:text-gray-200">Editing For</label>
         <select
           id="user-select"
+          disabled={submitting}
           on:change={(e) => {
               if(!users) return;
+              clearSubmitError();
 
               // @ts-expect-error ignore for now
               const value = e.target.value
@@ -361,8 +435,23 @@
         bind:attendeeName
         onSubmit={handleRsvpSubmit}
         onNameInput={e => attendeeName = (e.target as HTMLInputElement)?.value}
-        disabled={!registrationOpen}
+        disabled={!registrationOpen || submitUnconfirmed}
+        {submitting}
       />
+      {#if submitError}
+        <div role="alert" class="mt-3 rounded bg-red-600 px-4 py-2 text-white">
+          <p>{submitError}</p>
+          {#if submitUnconfirmed}
+            <button
+              type="button"
+              class="mt-2 rounded bg-white px-3 py-1 font-semibold text-red-700"
+              on:click={() => window.location.reload()}
+            >
+              Reload
+            </button>
+          {/if}
+        </div>
+      {/if}
     {:else if status !== undefined}
       {#if rsvp === 'going' && isUserOnWaitlist(attendees, user?.id ?? '', event.max_attendees)}
         <div class="mb-4 flex w-full items-center justify-center">

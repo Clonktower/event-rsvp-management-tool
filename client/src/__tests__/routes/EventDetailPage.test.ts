@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/svelte';
+import { render, screen, waitFor, fireEvent, cleanup, within } from '@testing-library/svelte';
 import EventDetailPage from '../../routes/events/[id]/+page.svelte';
 import type { Event } from '../../types/Event';
 import type { Rsvp } from '../../types/Rsvp';
@@ -12,6 +12,7 @@ vi.mock('add-to-calendar-button', () => ({}));
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   localStorage.clear();
 });
 
@@ -430,6 +431,400 @@ describe('EventDetailPage — server call reduction', () => {
     expect(stored['evt-1']).not.toHaveProperty('stale');
     // Pruning must rely on the already-loaded attendees, not a fresh fetch.
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('EventDetailPage — submitting an RSVP', () => {
+  const created: Rsvp = { id: 'new-1', name: 'Dana', event_id: 'evt-1', status: 'going', guests: 0, token: 'tok-new' };
+
+  function jsonResponse(status: number, body: unknown) {
+    return { ok: status < 400, status, json: async () => body } as Response;
+  }
+
+  // POST resolves only when the returned `release` is called, so a test can act
+  // while the request is still in flight.
+  function stubSlowPost() {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const fetchSpy = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === 'POST') {
+        await gate;
+        return jsonResponse(201, { rsvp: created });
+      }
+      return jsonResponse(200, { event: baseEvent, rsvp: [created] });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    return { fetchSpy, release };
+  }
+
+  const posts = (spy: ReturnType<typeof vi.fn>) =>
+    spy.mock.calls.filter(([, init]) => init?.method === 'POST');
+
+  async function fillName(name = 'Dana') {
+    const input = await screen.findByLabelText(/Your Name/);
+    await fireEvent.input(input, { target: { value: name } });
+  }
+
+  it('sends one request when Submit is pressed repeatedly before the first answer', async () => {
+    const { fetchSpy, release } = stubSlowPost();
+    render(EventDetailPage, { props: { data: buildData() } });
+    await fillName();
+
+    const form = screen.getByRole('button', { name: 'Submit' }).closest('form')!;
+    await fireEvent.submit(form);
+    await fireEvent.submit(form);
+    await fireEvent.submit(form);
+    expect(posts(fetchSpy)).toHaveLength(1);
+
+    release();
+    await waitFor(() => {
+      expect(screen.getByText('Your response was saved!')).toBeInTheDocument();
+    });
+    expect(posts(fetchSpy)).toHaveLength(1);
+  });
+
+  it('shows the server error and keeps the form when the submit is rejected', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(jsonResponse(403, { error: 'Registration not yet open.' }));
+    vi.stubGlobal('fetch', fetchSpy);
+    render(EventDetailPage, { props: { data: buildData() } });
+    await fillName();
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Registration not yet open.');
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+    expect(screen.queryByText('Your response was saved!')).not.toBeInTheDocument();
+  });
+
+  it('falls back to a generic message when the rejection has no readable body', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => { throw new SyntaxError('Unexpected token <'); },
+    } as unknown as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    render(EventDetailPage, { props: { data: buildData() } });
+    await fillName();
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/could not be saved/);
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  });
+
+  it('clears the previous error as soon as a new attempt starts', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const fetchSpy = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(403, { error: 'Registration not yet open.' }))
+      .mockImplementationOnce(async () => { await gate; return jsonResponse(201, { rsvp: created }); })
+      .mockResolvedValueOnce(jsonResponse(200, { event: baseEvent, rsvp: [created] }));
+    vi.stubGlobal('fetch', fetchSpy);
+    render(EventDetailPage, { props: { data: buildData() } });
+    await fillName();
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Registration not yet open.');
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    // The retry is still in flight, so the form (and with it the place the
+    // error is shown) is still on screen: the old error must be gone already.
+    expect(await screen.findByRole('button', { name: 'Saving…' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    release();
+    await waitFor(() => {
+      expect(screen.getByText('Your response was saved!')).toBeInTheDocument();
+    });
+  });
+
+  it('locks the name, the status buttons and Submit while the request is in flight', async () => {
+    const { release } = stubSlowPost();
+    render(EventDetailPage, { props: { data: buildData() } });
+    await fillName();
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(await screen.findByRole('button', { name: 'Saving…' })).toBeDisabled();
+    expect(screen.getByLabelText(/Your Name/)).toHaveAttribute('readonly');
+    for (const label of ['Going', 'Maybe', 'Not Going']) {
+      expect(screen.getByRole('button', { name: label })).toBeDisabled();
+    }
+
+    release();
+    await waitFor(() => {
+      expect(screen.getByText(/You are marked as/)).toBeInTheDocument();
+    });
+  });
+
+  it('confirms the response even when refreshing the list afterwards fails', async () => {
+    // The RSVP is saved at this point. Leaving the form open would invite a
+    // second submit for something that already went through.
+    const fetchSpy = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(201, { rsvp: created }))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(EventDetailPage, { props: { data: buildData() } });
+    await fillName();
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Your response was saved!')).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('my_events') ?? '{}')).toEqual({ 'evt-1': { 'new-1': 'tok-new' } });
+  });
+});
+
+describe('EventDetailPage — a new RSVP that could not be confirmed', () => {
+  // The request may have reached the server even though no answer came back.
+  // This device then holds no token for it, so another submit would create a
+  // second RSVP rather than edit the first.
+  async function submitNewRsvp() {
+    const input = await screen.findByLabelText(/Your Name/);
+    await fireEvent.input(input, { target: { value: 'Dana' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  }
+
+  async function expectLocked(fetchSpy: ReturnType<typeof vi.fn>) {
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/couldn't confirm that your response was saved/);
+    expect(within(alert).getByRole('button', { name: 'Reload' })).toBeInTheDocument();
+
+    const submit = screen.getByRole('button', { name: 'Submit' });
+    expect(submit).toBeDisabled();
+    // The name is still filled in, so the submit below is not stopped by the
+    // empty-name check: only the lock can be what keeps it from sending.
+    expect(screen.getByLabelText(/Your Name/)).toHaveValue('Dana');
+    const callsBefore = fetchSpy.mock.calls.length;
+    await fireEvent.submit(submit.closest('form')!);
+    expect(fetchSpy).toHaveBeenCalledTimes(callsBefore);
+    expect(screen.queryByText('Your response was saved!')).not.toBeInTheDocument();
+  }
+
+  it('keeps Submit locked and asks for a reload when the request fails without an answer', async () => {
+    const fetchSpy = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(EventDetailPage, { props: { data: buildData() } });
+    await submitNewRsvp();
+    await expectLocked(fetchSpy);
+  });
+
+  it('does the same when the server says it saved but the answer cannot be read', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => { throw new SyntaxError('Unexpected end of JSON input'); },
+    } as unknown as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(EventDetailPage, { props: { data: buildData() } });
+    await submitNewRsvp();
+    await expectLocked(fetchSpy);
+  });
+
+  it('does the same when a proxy answers 5xx, since the server may have saved by then', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 504,
+      json: async () => { throw new SyntaxError('Unexpected token <'); },
+    } as unknown as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    render(EventDetailPage, { props: { data: buildData() } });
+    await submitNewRsvp();
+    await expectLocked(fetchSpy);
+  });
+
+  it('does the same when the token for the saved RSVP cannot be stored', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ rsvp: { id: 'new-1', name: 'Dana', event_id: 'evt-1', status: 'going', guests: 0, token: 'tok-new' } }),
+    } as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+    });
+    render(EventDetailPage, { props: { data: buildData() } });
+    await submitNewRsvp();
+    await expectLocked(fetchSpy);
+  });
+
+  it('goes through the admin request during early access, and locks the same way when it fails', async () => {
+    const event: Event = { ...baseEvent, registration_opens_at: new Date(Date.now() + 3_600_000).toISOString() };
+    const restoreIntl = stubDurationFormat();
+    localStorage.setItem('credentials', 'admin:secret');
+    const fetchSpy = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/admin/login')) return { ok: true, status: 200, json: async () => ({}) } as Response;
+      if (init?.method === 'POST') throw new TypeError('Failed to fetch');
+      return { ok: true, status: 200, json: async () => ({ event, rsvp: [] }) } as Response;
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      render(EventDetailPage, { props: { data: buildData(event) } });
+      // Submit only becomes available to an admin once the login probe has answered.
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+      });
+      await submitNewRsvp();
+      await expectLocked(fetchSpy as ReturnType<typeof vi.fn>);
+
+      const post = fetchSpy.mock.calls.find(([url]) => String(url).endsWith('/events/evt-1/rsvp'))!;
+      expect(post[1]!.method).toBe('POST');
+      expect(new Headers(post[1]!.headers).get('Authorization')).toBe('Basic admin:secret');
+    } finally {
+      restoreIntl();
+    }
+  });
+
+  it('lifts the lock when "Editing For" switches to a stored response, since the next submit is then an edit', async () => {
+    const alice: Rsvp = { id: 'r1', name: 'Alice', event_id: 'evt-1', status: 'going', guests: 0, token: 'tok' };
+    const bob: Rsvp = { id: 'r2', name: 'Bob', event_id: 'evt-1', status: 'maybe', guests: 0, token: 'tok2' };
+    localStorage.setItem('my_events', JSON.stringify({ 'evt-1': { 'r1': 'tok', 'r2': 'tok2' } }));
+    const fetchSpy = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(EventDetailPage, { props: { data: buildData(baseEvent, [alice, bob]) } });
+
+    // A +1 is a new RSVP, so its failure locks the form.
+    await fireEvent.click(await screen.findByRole('button', { name: /Bringing a \+1/ }));
+    await submitNewRsvp();
+    await expectLocked(fetchSpy);
+
+    await fireEvent.change(screen.getByLabelText('Editing For'), { target: { value: 'r2' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+
+    // And that next submit is an edit of the chosen response, not another create.
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => {
+      expect(fetchSpy.mock.calls.some(([, init]) => init?.method === 'PATCH')).toBe(true);
+    });
+    const patch = fetchSpy.mock.calls.find(([, init]) => init?.method === 'PATCH')!;
+    expect(String(patch[0])).toMatch(/\/events\/evt-1\/rsvp\/r2$/);
+    expect(fetchSpy.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(1);
+  });
+
+  it('does the same when the answer carries no RSVP to store a token for', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 201, json: async () => ({}) } as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    render(EventDetailPage, { props: { data: buildData() } });
+    await submitNewRsvp();
+    await expectLocked(fetchSpy);
+  });
+});
+
+describe('EventDetailPage — editing an existing RSVP', () => {
+  const alice: Rsvp = { id: 'r1', name: 'Alice', event_id: 'evt-1', status: 'going', guests: 0, token: 'tok' };
+  const bob: Rsvp = { id: 'r2', name: 'Bob', event_id: 'evt-1', status: 'maybe', guests: 0, token: 'tok2' };
+
+  const patches = (spy: ReturnType<typeof vi.fn>) =>
+    spy.mock.calls.filter(([, init]) => init?.method === 'PATCH');
+
+  async function openEditForm(stored: Record<string, string> = { 'r1': 'tok' }, rsvps: Rsvp[] = [alice]) {
+    localStorage.setItem('my_events', JSON.stringify({ 'evt-1': stored }));
+    render(EventDetailPage, { props: { data: buildData(baseEvent, rsvps) } });
+    await fireEvent.click(await screen.findByTitle('Edit RSVP'));
+    return screen.getByRole('button', { name: 'Submit' }).closest('form')!;
+  }
+
+  it('sends one request when Submit is pressed repeatedly before the first answer', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const fetchSpy = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH') {
+        await gate;
+        return { ok: true, status: 200, json: async () => ({ rsvp: alice }) } as Response;
+      }
+      return { ok: true, status: 200, json: async () => ({ event: baseEvent, rsvp: [alice] }) } as Response;
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    const form = await openEditForm();
+
+    await fireEvent.submit(form);
+    await fireEvent.submit(form);
+    await fireEvent.submit(form);
+    expect(patches(fetchSpy)).toHaveLength(1);
+    expect(String(patches(fetchSpy)[0][0])).toMatch(/\/events\/evt-1\/rsvp\/r1$/);
+
+    release();
+    await waitFor(() => {
+      expect(screen.getByText('Your response was saved!')).toBeInTheDocument();
+    });
+    expect(patches(fetchSpy)).toHaveLength(1);
+  });
+
+  it('shows the server error and keeps the form when the edit is rejected', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({ error: 'RSVP not found or token invalid.' }),
+    } as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    const form = await openEditForm();
+    await fireEvent.submit(form);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('RSVP not found or token invalid.');
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  });
+
+  it('lets a failed edit be retried, since repeating an edit cannot create a duplicate', async () => {
+    const fetchSpy = vi.fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ rsvp: alice }) } as Response)
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ event: baseEvent, rsvp: [alice] }) } as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const form = await openEditForm();
+    await fireEvent.submit(form);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/could not be saved/);
+    expect(within(alert).queryByRole('button', { name: 'Reload' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+
+    await fireEvent.submit(form);
+    await waitFor(() => {
+      expect(screen.getByText('Your response was saved!')).toBeInTheDocument();
+    });
+    expect(patches(fetchSpy)).toHaveLength(2);
+  });
+
+  it('locks the "Editing For" select while saving and clears an old error when it changes', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const fetchSpy = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({ error: 'Internal Server Error' }) } as Response)
+      .mockImplementationOnce(async () => {
+        await gate;
+        return { ok: true, status: 200, json: async () => ({ rsvp: bob }) } as Response;
+      })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ event: baseEvent, rsvp: [alice, bob] }) } as Response);
+    vi.stubGlobal('fetch', fetchSpy);
+    const form = await openEditForm({ 'r1': 'tok', 'r2': 'tok2' }, [alice, bob]);
+    const select = screen.getByLabelText('Editing For');
+
+    await fireEvent.submit(form);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Internal Server Error');
+
+    // Switching to the other person drops the error that belonged to the first.
+    await fireEvent.change(select, { target: { value: 'r2' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    await fireEvent.submit(form);
+    await screen.findByRole('button', { name: 'Saving…' });
+    expect(select).toBeDisabled();
+
+    release();
+    await waitFor(() => {
+      expect(screen.getByText('Your response was saved!')).toBeInTheDocument();
+    });
+    // The retry went to Bob with Bob's token and status, and the banner shows
+    // Bob's status.
+    const retry = fetchSpy.mock.calls[1];
+    expect(String(retry[0])).toMatch(/\/events\/evt-1\/rsvp\/r2$/);
+    expect(JSON.parse(retry[1].body)).toMatchObject({ name: 'Bob', status: 'maybe', token: 'tok2' });
+    expect(screen.getByText('Maybe')).toBeInTheDocument();
   });
 });
 
